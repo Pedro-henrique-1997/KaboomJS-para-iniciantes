@@ -1,0 +1,24 @@
+onClick(() => {
+	raio.moveTo(mousePos());
+})
+
+onKeyDown("right", () => {
+	bean.move(velocidade, 0);
+})
+
+onKeyDown("left", () => {
+	bean.move(-velocidade, 0);
+})
+
+onKeyDown("down", () => {
+	bean.move(0, velocidade);
+})
+
+onKeyDown("up", () => {
+	bean.move(0, -velocidade);
+})
+
+onClick(() => {
+	addKaboom(bean.pos);
+	burp();
+})
