@@ -1,0 +1,43 @@
+const a = add([
+	sprite("grass"),
+	body({isStatic: true}),
+	area(),
+	pos(center()),
+	"grass",
+])
+
+const b = add([
+	sprite("aco"),
+	body({mass: 10}),
+	area(),
+	pos(100, 100),
+	"grass",
+])
+
+for(var i = 0; i < 5; i++){
+
+	const x = rand(0, width());
+	const y = rand(0, height());
+
+	const enemy = add([
+		sprite("ghosty"),
+		area(),
+		pos(x, y),
+		"enemy"
+	])
+
+}
+
+
+bean.onUpdate(() => {
+	// .isHovering() is provided by area() component, which returns a boolean of if the object is currently being hovered on
+	if (bean.isHovering()) {
+		bean.color = rgb(0, 0, 255)
+	} else {
+		bean.color = rgb()
+	}
+})
+
+bean.onCollide("enemy", (enemy) =>{
+	enemy.destroy(enemy);
+})
