@@ -10,6 +10,8 @@ loadSprite("aco", "sprites/steel.png");
 
 const velocidade = 320;
 
+setGravity(1600)
+
 const bean = add([
 	pos(80, 40),
 	sprite("bean"),
@@ -25,6 +27,24 @@ const a = add([
 	"grass",
 ])
 
+const pulo = 1200;
+
+function pular(){
+	if(bean.isGrounded()){
+		bean.jump(pulo);
+	}
+}
+
+onKeyDown("space", pular);
+
+add([
+	rect(width(), 48),
+	outline(4),
+	pos(0, height() - 48),
+	body({isStatic: true}),
+	area(),
+])
+
 const b = add([
 	sprite("aco"),
 	body({mass: 10}),
@@ -32,6 +52,8 @@ const b = add([
 	pos(100, 100),
 	"grass",
 ])
+
+/*
 
 for(var i = 0; i < 5; i++){
 
@@ -56,6 +78,7 @@ bean.onUpdate(() => {
 		bean.color = rgb()
 	}
 })
+
 
 bean.onCollide("enemy", (enemy) =>{
 	enemy.destroy(enemy);
