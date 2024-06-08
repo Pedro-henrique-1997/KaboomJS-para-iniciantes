@@ -1,27 +1,36 @@
+// Build levels with addLevel()
+
 import kaboom from "kaboom"
 
+// Start game
 kaboom()
+
+//Iniciando os sprites
 
 loadSprite("bean", "/sprites/bean.png")
 loadSprite("spike", "/sprites/spike.png")
-loadSprite("coin", "/sprites/coin.png")
 loadSprite("grass", "/sprites/grass.png")
-loadSound("bell", "/sounds/bell.mp3")
-
-const SPEED = 500;
+loadSprite("coin", "/sprites/coin.png")
+loadSound("score", "/sounds/bell.mp3")
 
 setGravity(2400)
 
+const SPEED = 500;
+
+//criando o mapa
+
 const level = addLevel([
-	"$$$$$$$$$",
-	"@  ^   $$",
+	
+    "@  ^  $$",
 	"=========",
-],  {
+], {//Posição dos blocos que compõe o mapa
 	tileWidth: 64,
 	tileHeight: 64,
 
-	pos: vec2(400, 200),
+	//posição do level
+	pos: vec2(450, 250),
 
+	//todos os componentes do level
 	tiles: {
 		"@": () => [
 			sprite("bean"),
@@ -36,14 +45,14 @@ const level = addLevel([
 			area(),
 			body({isStatic: true}),
 			anchor("bot"),
-			"chao",
+			"grass",
 		],
 
 		"$": () => [
 			sprite("coin"),
 			area(),
 			anchor("bot"),
-			"moeda",
+			"coin",
 		],
 
 		"^": () => [
@@ -51,32 +60,32 @@ const level = addLevel([
 			area(),
 			body({isStatic: true}),
 			anchor("bot"),
-			"espinho",
-		]
-	}
+			"danger",
+		],
+	},
 })
 
 const player = level.get("player")[0]
 
 onKeyDown("space", () => {
 	if(player.isGrounded()){
-		player.jump(800)
+		player.jump()
 	}
 })
 
 onKeyDown("left", () => {
-	player.move(-SPEED, 0)
+	player.move(-SPEED, 0);
 })
 
 onKeyDown("right", () => {
-	player.move(SPEED, 0)
+	player.move(SPEED, 0);
 })
 
-player.onCollide("moeda", (moeda) => {
-	destroy(moeda);
-	play("bell");
+player.onCollide("danger", () => {
+	player.pos = level.tile2Pos(0, 0)
 })
 
-player.onCollide("espinho", (espinho) => {
-	player.pos = level.tile2Pos(0, 0);
+player.onCollide("coin", (coin) => {
+	coin.destroy()
+	play("score")
 })
