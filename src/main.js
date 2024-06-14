@@ -3,80 +3,83 @@ import kaboom from "kaboom"
 kaboom()
 
 loadSprite("bean", "/sprites/bean.png");
-loadSprite("grass", "/sprites/grass.png");
-loadSprite("spike", "/sprites/spike.png");
+loadSprite("grass", "sprites/grass.png");
+loadSprite("espinho", "/sprites/spike.png");
 loadSprite("coin", "/sprites/coin.png");
 loadSound("bell", "/sounds/bell.mp3");
 
 setGravity(2400)
 
-const SPEED = 500;
+const velocidade = 500;
 
-const level = addLevel([
-	"$$$$$$$$$",
-	"@    :   ",
-	"=========",
+const fase = addLevel([
+	"$$$$$$$$$$$",
+	"@     : $$$",
+	"==========="
 ], {
 	tileWidth: 64,
 	tileHeight: 64,
 
-	pos: vec2(200, 200),
+	pos: vec2(450, 250),
 
 	tiles: {
 		"@": () => [
 			sprite("bean"),
-			anchor("bot"),
-			area(),
 			body(),
+			area(),
+			anchor("bot"),
 			"jogador",
 		],
 
 		"$": () => [
 			sprite("coin"),
-			anchor("bot"),
 			area(),
+			anchor("bot"),
 			"moeda",
-		],
-
-		":": () => [
-			sprite("spike"),
-			body({isStatic: true}),
-			anchor("bot"),
-			area(),
-			"espinho",
 		],
 
 		"=": () => [
 			sprite("grass"),
 			body({isStatic: true}),
-			anchor("bot"),
 			area(),
-			"grass",
-		],		
+			anchor("bot"),
+			"chao",
+		],
+
+		":": () => [
+			sprite("espinho"),
+			body({isStatic: true}),
+			area(),
+			anchor("bot"),
+			"espinho",
+		],
 	}
+
 })
 
-const player = level.get("jogador")[0];
+const jogador = fase.get("jogador")[0];
 
-onKeyDown("space", () => {
-	if(player.isGrounded()){
-		player.jump();
+function pular(){
+	if(jogador.isGrounded()){
+		jogador.jump();
 	}
-})
+}
+
+onKeyDown("space", pular);
 
 onKeyDown("right", () => {
-	player.move(SPEED, 0);
+	jogador.move(velocidade, 0);
 })
 
 onKeyDown("left", () => {
-	player.move(-SPEED, 0);
+	jogador.move(-velocidade, 0);
 })
 
-player.onCollide("moeda", (moeda) => {
+jogador.onCollide("moeda", (moeda) => {
 	moeda.destroy();
 	play("bell");
 })
 
-player.onCollide("espinho", (espinho) => {
-	player.pos = level.tile2Pos(0, 0);
+jogador.onCollide("espinho", (espinho) => {
+	jogador.pos = fase.tile2Pos(0, 0);
 })
