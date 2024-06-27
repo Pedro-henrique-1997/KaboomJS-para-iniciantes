@@ -10,15 +10,13 @@ loadSprite("grass", "/sprites/grass.png")
 loadSprite("ghosty", "/sprites/ghosty.png")
 loadSprite("portal", "/sprites/portal.png")
 loadSound("bell", "/sounds/bell.mp3")
-loadSound("cano", "/sounds/mario-entrando-no-cano.mp3")
+loadSound("cano", "/sounds/cano.mp3")
 loadSound("up", "/sounds/levelup.mp3")
 
 
 setGravity(2400)
 
 const SPEED = 480
-
-const score = 0
 
 // 1 - Criando as fases
 const LEVELS = [
@@ -32,8 +30,8 @@ const LEVELS = [
 	],
 
 	[
-		"@  $$$$$$ >",
-		"===========",
+		"@  ^ $$$$$$$$$ >",
+		"== = ============",
 	]
 ]
 
@@ -69,6 +67,7 @@ scene("game", ({ levelIdx, score }) => {
 			"^": () => [
 				sprite("spike"),
 				area(),
+				body({isStatic: true}),
 				anchor("bot"),
 				"danger",
 			],
@@ -80,14 +79,16 @@ scene("game", ({ levelIdx, score }) => {
 			],
 		},
 	})
-	
-	const jogador = level.get("player")[0];
 
-	onKeyPress("space", () => {
-		if(jogador.isGrounded()){
+	const jogador = level.get("player")[0]
+
+	function pular(){
+		if(jogador.isGrounded){
 			jogador.jump()
 		}
-	})
+	}
+
+	onKeyPress("space", pular)
 
 	onKeyDown("right", () => {
 		jogador.move(SPEED, 0)
@@ -98,27 +99,18 @@ scene("game", ({ levelIdx, score }) => {
 	})
 
 	const scoreLabel = add([
-		text(score),
+		text(0),
 		pos(12),
 	])
 
-	jogador.onCollide("coin",(coin) => {
-		destroy(coin)
+	jogador.onCollide("coin", (coin) => {
+        coin.destroy()
+		score++;
+		scoreLabel.text = score;
 		play("bell")
-
-		score++
-		scoreLabel.text = score
-	})
-	
-	jogador.onUpdate(() => {
-		if(jogador.pos.y >= 480){
-			go("lose")
-		}
 	})
 
-	
-
-	jogador.onCollide("danger", (danger) => {
+	jogador.onCollide("danger", () => {
 		jogador.pos = level.tile2Pos(0,0)
 		go("lose")
 	})
@@ -126,36 +118,44 @@ scene("game", ({ levelIdx, score }) => {
 	jogador.onCollide("portal", () => {
 		play("cano")
 
-		if(levelIdx < LEVELS.length - 1){
+		if(levelIdx < LEVELS.length -1){
 			go("game", {
-				levelIdx: levelIdx + 1,
 				score: score,
+				levelIdx: levelIdx + 1,
 			})
 		}else{
-			go("win", {score: score})
+			go("win", {
+				score: score,
+			})
+		}
+	})
+
+	jogador.onUpdate(() => {
+		if(jogador.pos.y >= 480){
+			go("lose")
 		}
 	})
 
 	scene("lose", () => {
 		add([
 			text("Voce Perdeu"),
-			pos(12)
+			pos(12),
 		])
-
+		
 		onKeyPress(start)
 	})
 
 	scene("win", () => {
 		play("up")
-
 		add([
-			text(`Voce Pegou ${score} moedas`),
-			pos(12)
+			text("Voce Pegou " + score),
+			pos(23, 23),
 		])
+		
 
 		onKeyPress(start)
 	})
-
+	
 })
 
 // 2:1 - Função que vai começar o jogo
