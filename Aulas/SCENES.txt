@@ -11,14 +11,12 @@ loadSprite("ghosty", "/sprites/ghosty.png")
 loadSprite("portal", "/sprites/portal.png")
 loadSound("bell", "/sounds/bell.mp3")
 loadSound("cano", "/sounds/mario-entrando-no-cano.mp3")
-loadSound("up", "/sounds/levelup.mp3")
+loadSound("up", "/sounds/levelupL.mp3")
 
 
 setGravity(2400)
 
 const SPEED = 480
-
-const score = 0
 
 // 1 - Criando as fases
 const LEVELS = [
@@ -30,11 +28,6 @@ const LEVELS = [
 		"@   $   >",
 		"=   =   =",
 	],
-
-	[
-		"@  $$$$$$ >",
-		"===========",
-	]
 ]
 
 // Define a scene called "game". The callback will be run when we go() to the scene
@@ -81,80 +74,95 @@ scene("game", ({ levelIdx, score }) => {
 		},
 	})
 	
-	const jogador = level.get("player")[0];
+	// 3:1 - Criando o personagem tirado do level
+	const player = level.get("player")[0]
 
+	// 3:2 fazendo o personagem pular
 	onKeyPress("space", () => {
-		if(jogador.isGrounded()){
-			jogador.jump()
+		if (player.isGrounded()) {
+			player.jump()
 		}
 	})
 
-	onKeyDown("right", () => {
-		jogador.move(SPEED, 0)
-	})
-
+	// 4 - Criando as direções do personagem
 	onKeyDown("left", () => {
-		jogador.move(-SPEED, 0)
+		player.move(-SPEED, 0)
 	})
 
+	onKeyDown("right", () => {
+		player.move(SPEED, 0)
+	})
+
+	// 5:1 Criando as colisoes
+	player.onCollide("danger", () => {
+		player.pos = level.tile2Pos(0, 0)
+		// Indo para a cena lose
+		go("lose")
+	})
+
+	player.onCollide("coin", (coin) => {
+		destroy(coin)
+		play("bell")
+		// Atualizando a pontuação
+		score++
+		scoreLabel.text = score
+	})
+
+	// 5:2 Quando o personagem sair do level
+	player.onUpdate(() => {
+		if (player.pos.y >= 480) {
+			go("lose")
+		}
+	})
+
+	// 5:3 Quando encostar no portal
+	player.onCollide("portal", () => {
+		play("cano")
+		if (levelIdx < LEVELS.length - 1) {
+			// If there's a next level, go() to the same scene but load the next level
+			go("game", {
+				levelIdx: levelIdx + 1,
+				score: score,
+			})
+		} else {
+			// Otherwise we have reached the end of game, go to "win" scene!
+			go("win", { score: score })
+		}
+	})
+
+	// 6 - Atualizando a pontuação
 	const scoreLabel = add([
 		text(score),
 		pos(12),
 	])
 
-	jogador.onCollide("coin",(coin) => {
-		destroy(coin)
-		play("bell")
-
-		score++
-		scoreLabel.text = score
-	})
-	
-	jogador.onUpdate(() => {
-		if(jogador.pos.y >= 480){
-			go("lose")
-		}
-	})
-
-	
-
-	jogador.onCollide("danger", (danger) => {
-		jogador.pos = level.tile2Pos(0,0)
-		go("lose")
-	})
-
-	jogador.onCollide("portal", () => {
-		play("cano")
-
-		if(levelIdx < LEVELS.length - 1){
-			go("game", {
-				levelIdx: levelIdx + 1,
-				score: score,
-			})
-		}else{
-			go("win", {score: score})
-		}
-	})
-
+	// 7 -  Quando chegar na tela de fim de jogo
 	scene("lose", () => {
-		add([
-			text("Voce Perdeu"),
-			pos(12)
-		])
-
-		onKeyPress(start)
-	})
-
-	scene("win", () => {
-		play("up")
 
 		add([
-			text(`Voce Pegou ${score} moedas`),
-			pos(12)
+			text("You Lose"),
+			pos(12),
 		])
-
+	
+		// Press any key to go back
 		onKeyPress(start)
+	
 	})
+	
+	//7:1 -  Quando chegar na tela de vencedor
+	scene("win", ({ score }) => {
+	  play("up")
+		add([
+			text(`You grabbed ${score} coins!!!`, {
+				width: width(),
+			}),
+			pos(12),
+		])
+	
+		onKeyPress(start)
+	
+	})
+	
 
 })
 
