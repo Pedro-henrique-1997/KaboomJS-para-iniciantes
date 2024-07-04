@@ -6,12 +6,12 @@ loadSprite("bean", "/sprites/bean.png")
 
 loop(0.5, () => {
 
-	const bean = add([
+	const player = add([
 		sprite("bean"),
-		pos(rand(vec2(0), vec2(width(), height()))),
+		pos(rand(vec2(0), vec2(width(), height())))
 	])
 
 	wait(3, () => {
-		destroy(bean)
+		destroy(player)
 	})
 })
