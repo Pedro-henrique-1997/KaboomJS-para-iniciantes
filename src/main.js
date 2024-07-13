@@ -5,28 +5,15 @@ kaboom()
 loadSprite("bean", "/sprites/bean.png")
 
 function funky(){
-
 	let isFunky = false;
 
 	return {
-		
+        
 		id: "funky",
 
-		require: ["scale", "color"],
+		require: ["color", "scale"],
 
-		add(){
-
-		},
-
-		update(){
-
-			if(!isFunky) return
-			this.color = rgb(rand(0, 255), rand(0, 255), rand(0, 255)),
-			this.scale = rand(1, 2)
-
-		},
-
-		drawn(){
+		add() {
 
 		},
 
@@ -34,29 +21,33 @@ function funky(){
 
 		},
 
+		update(){
+			if(!isFunky) return
+			this.color = rgb(rand(0, 255), rand(0, 255), rand(0, 255)),
+			this.scale = rand(1, 2)
+		},
+
 		inspect(){
-           return isFunky ? "one" : "off";
+			return isFunky ? "on" : "off"
 		},
 
 		getFunky(){
-			isFunky = true;
-		}
-
+			isFunky = true
+		},
 	}
 }
 
 const bean = add([
 	sprite("bean"),
-	scale(1),
 	pos(center()),
+	scale(1),
+	area(),
 	anchor("center"),
 	color(),
-	area(),
 	funky(),
-	"friend",
 	{
-		coolness: 100,
-    }
+		coolness:  100,
+	},
 ])
 
 onKeyPress("space", () => {
@@ -65,7 +56,7 @@ onKeyPress("space", () => {
 	}
 })
 
-onKeyPress("r", () => {
+onKeyPress("d", () => {
 	bean.use(rotate(rand(0, 360)))
 })
 
