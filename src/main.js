@@ -3,68 +3,86 @@ import kaboom from "kaboom"
 kaboom()
 
 loadSprite("bean", "/sprites/bean.png")
+loadSprite("grass", "/sprites/grass.png")
+loadSprite("coin", "/sprites/coin.png")
+loadSound("bell", "/sounds/bell.mp3")
 
-function funky(){
-	let isFunky = false;
+setGravity(2400)
 
-	return {
-        
-		id: "funky",
+const SPEED = 480;
 
-		require: ["color", "scale"],
+const level = addLevel([
+	"@  = $$$$$$$$",
+	"=============",
+], {
+	tileWidth: 64,
+	tileHeight: 64,
+	pos: vec2(400, 200),
 
-		add() {
+	tiles: {
+		"@": () => [
+			sprite("bean"),
+			area(),
+			body(),
+			anchor("bot"),
+			"player",
+		],
 
-		},
+		"=": () => [
+			sprite("grass"),
+			body({isStatic: true}),
+			anchor("bot"),
+			area(),
+			"chao",
+		],
 
-		destroy(){
+		"$": () => [
+			sprite("coin"),
+			area(),
+			anchor("bot"),
+			"coin",
+		],
+	}
+})
 
-		},
+const player = level.get("player")[0];
 
-		update(){
-			if(!isFunky) return
-			this.color = rgb(rand(0, 255), rand(0, 255), rand(0, 255)),
-			this.scale = rand(1, 2)
-		},
-
-		inspect(){
-			return isFunky ? "on" : "off"
-		},
-
-		getFunky(){
-			isFunky = true
-		},
+function pular(){
+	if(player.isGrounded()){
+		player.jump()
 	}
 }
 
-const bean = add([
-	sprite("bean"),
-	pos(center()),
-	scale(1),
-	area(),
-	anchor("center"),
-	color(),
-	funky(),
-	{
-		coolness:  100,
-	},
-])
+onKeyPress("space", pular)
 
-onKeyPress("space", () => {
-	if(bean.coolness >= 100){
-		bean.getFunky()
-	}
+onKeyDown("right", () => {
+	player.move(SPEED, 0)
 })
 
-onKeyPress("d", () => {
-	bean.use(rotate(rand(0, 360)))
+onKeyDown("left", () => {
+	player.move(-SPEED, 0)
 })
 
-onKeyPress("a", () => {
-	bean.unuse("funky")
+player.onUpdate(() => {
+	camPos(player.worldPos())
 })
 
-add([
-	text("Aperte SPACE para começar"),
+var score = 0;
+
+const scoreLabel = add([
+	text(score),
 	pos(12, 12),
+	fixed()
 ])
+
+player.onCollide("coin", (coin) => {
+     coin.destroy()
+	 score++;
+	 scoreLabel.text = score
+	 play("bell")
+})
+
+onClick(() => {
+	addKaboom(toWorld(mousePos()))
+	burp()
+})
