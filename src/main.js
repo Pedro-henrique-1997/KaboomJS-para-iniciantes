@@ -9,80 +9,81 @@ loadSound("bell", "/sounds/bell.mp3")
 
 setGravity(2400)
 
-const SPEED = 480;
+const SPEED = 400;
 
-const level = addLevel([
-	"@  = $$$$$$$$",
-	"=============",
+const fase = addLevel([
+	"@  = $$$$$$$ $$$",
+	"= ======== =====",
 ], {
 	tileWidth: 64,
 	tileHeight: 64,
-	pos: vec2(400, 200),
-
+	pos: vec2(350, 200),
 	tiles: {
 		"@": () => [
 			sprite("bean"),
 			area(),
 			body(),
 			anchor("bot"),
-			"player",
-		],
-
-		"=": () => [
-			sprite("grass"),
-			body({isStatic: true}),
-			anchor("bot"),
-			area(),
-			"chao",
+			"player"
 		],
 
 		"$": () => [
 			sprite("coin"),
 			area(),
 			anchor("bot"),
-			"coin",
+			"moeda",
+		],
+		
+		"=": () => [
+			sprite("grass"),
+			body({isStatic: true}),
+			anchor("bot"),
+			area(),
+			"grass",
 		],
 	}
 })
 
-const player = level.get("player")[0];
-
-function pular(){
-	if(player.isGrounded()){
-		player.jump()
-	}
-}
-
-onKeyPress("space", pular)
+const jogador = fase.get("player")[0]
 
 onKeyDown("right", () => {
-	player.move(SPEED, 0)
+	jogador.move(SPEED, 0)
 })
 
 onKeyDown("left", () => {
-	player.move(-SPEED, 0)
+	jogador.move(-SPEED, 0)
 })
 
-player.onUpdate(() => {
-	camPos(player.worldPos())
+onKeyPress("space", () => {
+	if (jogador.isGrounded()) {
+		jogador.jump()
+	}
 })
 
-var score = 0;
+jogador.onUpdate(() => {
+	camPos(jogador.worldPos())
+})
 
-const scoreLabel = add([
-	text(score),
+var pontos = 0;
+
+var pontosLabel = add([
+	text(pontos),
 	pos(12, 12),
 	fixed()
 ])
 
-player.onCollide("coin", (coin) => {
-     coin.destroy()
-	 score++;
-	 scoreLabel.text = score
-	 play("bell")
+jogador.onCollide("moeda", (moeda) => {
+    moeda.destroy();
+	pontos++;
+	play("bell")
+})
+
+pontosLabel.onUpdate(() => {
+	
+	pontosLabel.text = pontos;
 })
 
 onClick(() => {
 	addKaboom(toWorld(mousePos()))
-	burp()
+	
 })
