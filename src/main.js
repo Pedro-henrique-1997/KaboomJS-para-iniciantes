@@ -2,88 +2,82 @@ import kaboom from "kaboom"
 
 kaboom()
 
+const SPEED = 320;
+const BULLET_SPEED = 700;
+const ENEMY_SPEED = 320;
+
 loadSprite("bean", "/sprites/bean.png")
-loadSprite("grass", "/sprites/grass.png")
-loadSprite("coin", "/sprites/coin.png")
-loadSound("bell", "/sounds/bell.mp3")
+loadSprite("ghosty", "/sprites/ghosty.png")
 
-setGravity(2400)
+const player = add([
+	sprite("bean"),
+	pos(80, 80),
+	area(),
+	anchor("center")
+])
 
-const SPEED = 400;
-
-const fase = addLevel([
-	"@  = $$$$$$$ $$$",
-	"= ======== =====",
-], {
-	tileWidth: 64,
-	tileHeight: 64,
-	pos: vec2(350, 200),
-	tiles: {
-		"@": () => [
-			sprite("bean"),
-			area(),
-			body(),
-			anchor("bot"),
-			"player"
-		],
-
-		"$": () => [
-			sprite("coin"),
-			area(),
-			anchor("bot"),
-			"moeda",
-		],
-		
-		"=": () => [
-			sprite("grass"),
-			body({isStatic: true}),
-			anchor("bot"),
-			area(),
-			"grass",
-		],
-	}
+onKeyDown("down", () => {
+	player.move(0, SPEED)
 })
 
-const jogador = fase.get("player")[0]
+onKeyDown("up", () => {
+	player.move(0, -SPEED)
+})
 
 onKeyDown("right", () => {
-	jogador.move(SPEED, 0)
+	player.move(SPEED, 0)
 })
 
 onKeyDown("left", () => {
-	jogador.move(-SPEED, 0)
+	player.move(-SPEED, 0)
 })
 
-onKeyPress("space", () => {
-	if (jogador.isGrounded()) {
-		jogador.jump()
+const enemy = add([
+	sprite("ghosty"),
+	anchor("center"),
+	pos(width() - 80, height() - 80),
+	state("move", ["idle", "atack", "move"]),
+])
+
+enemy.onStateEnter("idle", async () => {
+	await wait(0.5)
+	enemy.enterState("atack")
+})
+
+enemy.onStateEnter("atack", async() => {
+	if(player.exists()){
+
+        const dir = player.pos.sub(enemy.pos).unit()
+
+		add([
+			pos(enemy.pos),
+			move(dir, BULLET_SPEED),
+			rect(12, 12),
+			area(),
+			offscreen({destroy: true}),
+			anchor("center"),
+			color(BLUE),
+			"bullet",
+		])
+
+		await wait(1)
+		enemy.enterState("move")
 	}
 })
 
-jogador.onUpdate(() => {
-	camPos(jogador.worldPos())
+enemy.onStateEnter("move", async() => {
+	await wait(2)
+	enemy.enterState("idle")
 })
 
-var pontos = 0;
-
-var pontosLabel = add([
-	text(pontos),
-	pos(12, 12),
-	fixed()
-])
-
-jogador.onCollide("moeda", (moeda) => {
-    moeda.destroy();
-	pontos++;
-	play("bell")
+enemy.onStateUpdate("move", () => {
+	if(!player.exists()) return
+	const dir = player.pos.sub(enemy.pos).unit()
+	enemy.move(dir.scale(ENEMY_SPEED))
 })
 
-pontosLabel.onUpdate(() => {
-	
-	pontosLabel.text = pontos;
-})
-
-onClick(() => {
-	addKaboom(toWorld(mousePos()))
-	
+player.onCollide("bullet", (bullet) => {
+	destroy(player)
+	destroy(bullet)
+	addKaboom(bullet.pos)
 })
