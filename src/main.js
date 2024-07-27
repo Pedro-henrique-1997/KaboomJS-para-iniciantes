@@ -2,27 +2,19 @@ import kaboom from "kaboom"
 
 kaboom()
 
-const SPEED = 320;
-const BULLET_SPEED = 700;
-const ENEMY_SPEED = 320;
-
 loadSprite("bean", "/sprites/bean.png")
-loadSprite("ghosty", "/sprites/ghosty.png")
+loadSprite("ghosty", "sprites/ghosty.png")
+
+const SPEED = 320;
+const bala_speed = 800;
+const ENEMY_SPEED = 400;
 
 const player = add([
 	sprite("bean"),
-	pos(80, 80),
+	pos(100, 100),
 	area(),
 	anchor("center")
 ])
-
-onKeyDown("down", () => {
-	player.move(0, SPEED)
-})
-
-onKeyDown("up", () => {
-	player.move(0, -SPEED)
-})
 
 onKeyDown("right", () => {
 	player.move(SPEED, 0)
@@ -32,52 +24,57 @@ onKeyDown("left", () => {
 	player.move(-SPEED, 0)
 })
 
+onKeyDown("down", () => {
+	player.move(0, SPEED)
+})
+
+onKeyDown("up", () => {
+	player.move(0, -SPEED)
+})
+
 const enemy = add([
 	sprite("ghosty"),
-	anchor("center"),
 	pos(width() - 80, height() - 80),
-	state("move", ["idle", "atack", "move"]),
+	anchor("center"),
+	// This enemy cycle between 3 states, and start from "idle" state
+	state("move", [ "idle", "attack", "move" ]),
 ])
 
-enemy.onStateEnter("idle", async () => {
+enemy.onStateEnter("idle", async() => {
 	await wait(0.5)
-	enemy.enterState("atack")
+	enemy.enterState("attack")
 })
 
-enemy.onStateEnter("atack", async() => {
-	if(player.exists()){
-
-        const dir = player.pos.sub(enemy.pos).unit()
-
-		add([
-			pos(enemy.pos),
-			move(dir, BULLET_SPEED),
-			rect(12, 12),
-			area(),
-			offscreen({destroy: true}),
-			anchor("center"),
-			color(BLUE),
-			"bullet",
-		])
-
-		await wait(1)
-		enemy.enterState("move")
-	}
-})
-
-enemy.onStateEnter("move", async() => {
+enemy.onStateEnter("move", async () => {
 	await wait(2)
 	enemy.enterState("idle")
 })
 
+
 enemy.onStateUpdate("move", () => {
 	if(!player.exists()) return
+		const dir = player.pos.sub(enemy.pos).unit()
+		enemy.move(dir.scale(ENEMY_SPEED))
+	
+})
+
+enemy.onStateUpdate("attack", () => {
 	const dir = player.pos.sub(enemy.pos).unit()
-	enemy.move(dir.scale(ENEMY_SPEED))
+
+	add([
+		pos(enemy.pos),
+			move(dir, bala_speed),
+			rect(12, 12),
+			area(),
+			offscreen({ destroy: true }),
+			anchor("center"),
+			color(RED),
+			"bullet",
+	])
 })
 
 player.onCollide("bullet", (bullet) => {
-	destroy(player)
-	destroy(bullet)
+	destroy(bullet),
+	destroy(player),
 	addKaboom(bullet.pos)
 })
