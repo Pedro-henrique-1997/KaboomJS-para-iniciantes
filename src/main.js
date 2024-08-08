@@ -3,78 +3,89 @@ import kaboom from "kaboom"
 kaboom()
 
 loadSprite("bean", "/sprites/bean.png")
-loadSprite("ghosty", "sprites/ghosty.png")
+loadSprite("moeda", "/sprites/coin.png")
+loadSprite("grass", "/sprites/grass.png")
+loadSprite("espinho", "/sprites/spike.png")
+loadSound("bell", "/sounds/bell.mp3")
 
-const SPEED = 320;
-const bala_speed = 800;
-const ENEMY_SPEED = 400;
+setGravity(2000)
 
-const player = add([
-	sprite("bean"),
-	pos(100, 100),
-	area(),
-	anchor("center")
-])
+const velocidade = 400;
+
+const level = addLevel([
+	"@  > $$$$$$$",
+	"============",
+], {
+	pos: vec2(200, 200),
+    tileWidth: 64,
+	tileHeight: 64,
+
+	tiles: {
+		"@": () => [
+			sprite("bean"),
+			area(),
+			body(),
+			anchor("center"),
+			"jogador",
+		],
+
+		"=": () => [
+			sprite("grass"),
+			area(),
+			body({isStatic: true}),
+			anchor("center"),
+			"chao",
+		],
+
+		"$": () => [
+			sprite("moeda"),
+			area(),
+			anchor("center"),
+			"moeda",
+		],
+
+		">": () => [
+			sprite("espinho"),
+			area(),
+			body({isStatic: true}),
+			"espinho",
+		],
+	}
+})
+
+const jogador = level.get("jogador")[0]
+
+function pular(){
+	if(jogador.isGrounded()){
+		jogador.jump()
+	}
+}
+
+onKeyPress("space", pular)
 
 onKeyDown("right", () => {
-	player.move(SPEED, 0)
+	jogador.move(velocidade, 0)
 })
 
 onKeyDown("left", () => {
-	player.move(-SPEED, 0)
+	jogador.move(-velocidade, 0)
 })
 
-onKeyDown("down", () => {
-	player.move(0, SPEED)
-})
+var pontos = 0
 
-onKeyDown("up", () => {
-	player.move(0, -SPEED)
-})
-
-const enemy = add([
-	sprite("ghosty"),
-	pos(width() - 80, height() - 80),
-	anchor("center"),
-	// This enemy cycle between 3 states, and start from "idle" state
-	state("move", [ "idle", "attack", "move" ]),
+var pontosLabel = add([
+	text(pontos),
+	pos(12, 12)
 ])
 
-enemy.onStateEnter("idle", async() => {
-	await wait(0.5)
-	enemy.enterState("attack")
+jogador.onCollide("moeda", (moeda) => {
+	destroy(moeda);
+	pontos++;
+	pontosLabel.text = pontos;
+    play("bell")
 })
 
-enemy.onStateEnter("move", async () => {
-	await wait(2)
-	enemy.enterState("idle")
-})
-
-
-enemy.onStateUpdate("move", () => {
-	if(!player.exists()) return
-		const dir = player.pos.sub(enemy.pos).unit()
-		enemy.move(dir.scale(ENEMY_SPEED))
-	
-})
-
-enemy.onStateUpdate("attack", () => {
-	const dir = player.pos.sub(enemy.pos).unit()
-
-	add([
-		pos(enemy.pos),
-			move(dir, bala_speed),
-			rect(12, 12),
-			area(),
-			offscreen({ destroy: true }),
-			anchor("center"),
-			color(RED),
-			"bullet",
-	])
-})
-
-player.onCollide("bullet", (bullet) => {
-	destroy(bullet),
-	destroy(player),
-	addKaboom(bullet.pos)
+jogador.onCollide("espinho", (espinho) => {
+	jogador.pos = level.pos2Tile(0, 0)
+	shake()
 })
