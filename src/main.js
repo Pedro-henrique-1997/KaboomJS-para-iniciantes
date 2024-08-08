@@ -1,91 +1,92 @@
 import kaboom from "kaboom"
-
+// Start game
 kaboom()
 
+// Load assets
 loadSprite("bean", "/sprites/bean.png")
-loadSprite("moeda", "/sprites/coin.png")
+loadSprite("coin", "/sprites/coin.png")
+loadSprite("spike", "/sprites/spike.png")
 loadSprite("grass", "/sprites/grass.png")
-loadSprite("espinho", "/sprites/spike.png")
+loadSprite("ghosty", "/sprites/ghosty.png")
+loadSprite("portal", "/sprites/portal.png")
 loadSound("bell", "/sounds/bell.mp3")
+loadSound("cano", "/sounds/mario-entrando-no-cano.mp3")
+loadSound("up", "/sounds/levelupL.mp3")
 
-setGravity(2000)
 
-const velocidade = 400;
+setGravity(2400)
 
-const level = addLevel([
-	"@  > $$$$$$$",
-	"============",
-], {
-	pos: vec2(200, 200),
-    tileWidth: 64,
-	tileHeight: 64,
+const LEVELS = [
+	[
+		"@  > $$$$$$  #",
+		"==============",
+	],
 
-	tiles: {
-		"@": () => [
-			sprite("bean"),
-			area(),
-			body(),
-			anchor("center"),
-			"jogador",
-		],
+	[
+		"@  $  $  #",
+		"=  =  =  =",
+	],
 
-		"=": () => [
-			sprite("grass"),
-			area(),
-			body({isStatic: true}),
-			anchor("center"),
-			"chao",
-		],
+	[
+		"@ > $$$$ > #",
+		"=== = = = ==",
+	],
+]
 
-		"$": () => [
-			sprite("moeda"),
-			area(),
-			anchor("center"),
-			"moeda",
-		],
+scene("game", ({levelIdx, score}) => {
 
-		">": () => [
-			sprite("espinho"),
-			area(),
-			body({isStatic: true}),
-			"espinho",
-		],
+	const level = addLevel(LEVELS[levelIdx || 0], {
+		tileWidth: 64,
+		tileHeight: 64,
+		pos: vec2(420, 200),
+
+		tiles: {
+			"@": () => [
+				sprite("bean"),
+				area(),
+				body(),
+				anchor("bot"),
+				"player",
+			],
+
+			"=": () => [
+				sprite("grass"),
+				body({isStatic: true}),
+				anchor("bot"),
+				area(),
+				"chao",
+			],
+			
+			"$": () => [
+				sprite("coin"),
+				area(),
+				anchor("bot"),
+				"coin",
+			],
+
+			"#": () => [
+				sprite("portal"),
+				area(),
+				anchor("bot"),
+				"portal",
+			],
+
+			">": () => [
+				sprite("spike"),
+				area(),
+				anchor("bot"),
+                "spike",
+			],
+		}
+
+	})
+
+	function start() {
+		go("game",  {
+           levelIdx: 0,
+		   score: 0,
+		})
 	}
 })
 
-const jogador = level.get("jogador")[0]
-
-function pular(){
-	if(jogador.isGrounded()){
-		jogador.jump()
-	}
-}
-
-onKeyPress("space", pular)
-
-onKeyDown("right", () => {
-	jogador.move(velocidade, 0)
-})
-
-onKeyDown("left", () => {
-	jogador.move(-velocidade, 0)
-})
-
-var pontos = 0
-
-var pontosLabel = add([
-	text(pontos),
-	pos(12, 12)
-])
-
-jogador.onCollide("moeda", (moeda) => {
-	destroy(moeda);
-	pontos++;
-	pontosLabel.text = pontos;
-    play("bell")
-})
-
-jogador.onCollide("espinho", (espinho) => {
-	jogador.pos = level.pos2Tile(0, 0)
-	shake()
-})
+start()
