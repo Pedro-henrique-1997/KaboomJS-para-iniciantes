@@ -10,8 +10,8 @@ loadSprite("grass", "/sprites/grass.png")
 loadSprite("ghosty", "/sprites/ghosty.png")
 loadSprite("portal", "/sprites/portal.png")
 loadSound("bell", "/sounds/bell.mp3")
-loadSound("cano", "/sounds/mario-entrando-no-cano.mp3")
-loadSound("up", "/sounds/levelupL.mp3")
+loadSound("cano", "/sounds/cano.mp3")
+loadSound("up", "/sounds/levelup.mp3")
 
 
 setGravity(2400)
