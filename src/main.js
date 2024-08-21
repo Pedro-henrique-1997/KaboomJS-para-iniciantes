@@ -1,8 +1,7 @@
 import kaboom from "kaboom"
-// Start game
+
 kaboom()
 
-// Load assets
 loadSprite("bean", "/sprites/bean.png")
 loadSprite("coin", "/sprites/coin.png")
 loadSprite("spike", "/sprites/spike.png")
@@ -13,34 +12,32 @@ loadSound("bell", "/sounds/bell.mp3")
 loadSound("cano", "/sounds/cano.mp3")
 loadSound("up", "/sounds/levelup.mp3")
 
-
 setGravity(2400)
 
-const SPEED = 480
-
-const LEVELS = [
+const FASES = [
 	[
-		"@ > $$$$$$ #",
-		"============",
+		"@ > $$$$$$$$ %",
+		"==============",
 	],
 
 	[
-		"@ > $ $ $ $ #",
-		"====== = = ===",
+		"@ > $ $ $ $ %",
+		"= = = = = = =",
 	],
 
 	[
-		"@  $  #",
-		"=  =  ="
-	]
+		"@ $ $ $ $  $",
+		"======== == ",
+		">> ======== %",
+		"=============",
+	],
 ]
 
 scene("game", ({levelIdx, score}) => {
-     
-	const level = addLevel(LEVELS[levelIdx || 0], {
+	const fase = addLevel(FASES[levelIdx || 0], {
 		tileWidth: 64,
 		tileHeight: 64,
-		pos: vec2(200, 200),
+		pos: vec2(420, 200),
 
 		tiles: {
 			"@": () => [
@@ -48,121 +45,128 @@ scene("game", ({levelIdx, score}) => {
 				area(),
 				body(),
 				anchor("bot"),
-				"player",
+				"avatar",
 			],
 
 			"=": () => [
 				sprite("grass"),
 				body({isStatic: true}),
-				area(),
 				anchor("bot"),
-				"grass",
+				area(),
+				"chao",
 			],
-
+            
 			"$": () => [
 				sprite("coin"),
 				area(),
 				anchor("bot"),
-				"moeda",
+				"coin",
+			],
+
+			"%": () => [
+				sprite("portal"),
+				area(),
+				body({isStatic: true}),
+				anchor("bot"),
+				"portal",
 			],
 
 			">": () => [
 				sprite("spike"),
 				area(),
+				body({isStatic: true}),
 				anchor("bot"),
-				"espinho",
-			],
-
-			"#": () => [
-				sprite("portal"),
-				area(),
-				anchor("bot"),
-				"portal",
-			],
+				"spike",
+			]
 		}
 	})
 
-	const player = level.get("player")[0]
+	
+
+	const avatar = fase.get("avatar")[0]
 
 	function pular(){
-		if(player.isGrounded()){
-			player.jump()
+		if(avatar.isGrounded()){
+			avatar.jump()
 		}
 	}
 
-	onKeyPress("space", pular)
+	var velocidade = 400;
 
 	onKeyDown("right", () => {
-		player.move(SPEED, 0)
+		avatar.move(velocidade, 0)
 	})
 
 	onKeyDown("left", () => {
-		player.move(-SPEED, 0)
+		avatar.move(-velocidade, 0)
 	})
 
-	var scoreLabel = add([
+	onKeyDown("space", pular)
+
+	avatar.onUpdate(() => {
+		if (avatar.pos.y >= 480) {
+			go("lose")
+		}
+	})
+
+	avatar.onCollide("spike", (spike) => {
+		go("lose")
+	})
+
+	let scoreLabel = add([
 		text(score),
 		pos(12, 12),
 	])
 
-	player.onCollide("espinho", (espinho) => {
-		go("loose")
-	})
-
-	player.onCollide("portal", () => {
-		play("cano")
-		if(levelIdx < LEVELS.length - 1){
-			go("game", {
-				score: score,
-				levelIdx: levelIdx + 1,
-			})
-		}else{
-			go("win", {
-				score: score,
-			})
-		}
-	})
-
-	player.onCollide("moeda", (moeda) => {
-		destroy(moeda),
+	avatar.onCollide("coin", (coin) => {
+		destroy(coin)
 		score++;
 		scoreLabel.text = score;
 		play("bell")
 	})
 
-	player.onUpdate(() => {
-		if(player.pos.y >= 480){
-		go("loose")
+	avatar.onCollide("portal", () => {
+		play("cano")
+
+		if(levelIdx < FASES.length - 1){
+			go("game", {
+				levelIdx: levelIdx + 1,
+				score: score,
+			})
+		}else{
+			go("vitoria", {score: score})
 		}
 	})
+	
+	scene("lose", () => {
 
-	scene("loose", () => {
 		add([
-			text("Perdeu"),
-			pos(12, 12),
+			text("You Lose"),
+			pos(12),
 		])
+	
+		// Press any key to go back
+		onKeyPress(comecar)
+	
 	})
 
-	scene("win", ({score}) => {
+	scene("vitoria", ({score}) => {
+		add([
+			text("Voce Ganhou " + score + " moedas"),
+			pos(12)
+		])
+       
 		play("up")
-		add([
-			text(`Voçe pegou ${score} moedas`),
-			pos(12, 12)
-		])
-
-		onKeyPress(start)
-
+		onKeyPress(comecar)
 	})
-
 	
 })
 
-function start(){
+function comecar(){
 	go("game", {
 		levelIdx: 0,
 		score: 0,
 	})
-	
 }
 
-start()
+comecar()
