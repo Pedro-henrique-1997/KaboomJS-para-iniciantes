@@ -16,30 +16,29 @@ setGravity(2400)
 
 const FASES = [
 	[
-		"@ > $$$$$$$$ %",
-		"==============",
+		"@  > $$$$$$$$ #",
+		"===============",
 	],
 
 	[
-		"@ > $ $ $ $ %",
-		"= = = = = = =",
+		"@ > $$$ > $$$$$$$ #",
+		"==================="
 	],
 
 	[
-		"@ $ $ $ $  $",
-		"======== == ",
-		">> ======== %",
-		"=============",
+		"@ $ $ ",
+		"= = = =#",
+		"========",
 	],
 ]
 
-scene("game", ({levelIdx, score}) => {
-	const fase = addLevel(FASES[levelIdx || 0], {
+scene("game", ({nivel_fase, pontos}) => {
+	const painel = addLevel(FASES[nivel_fase || 0], {
 		tileWidth: 64,
 		tileHeight: 64,
-		pos: vec2(420, 200),
+		pos: vec2(300, 200),
 
-		tiles: {
+        tiles: {
 			"@": () => [
 				sprite("bean"),
 				area(),
@@ -55,18 +54,17 @@ scene("game", ({levelIdx, score}) => {
 				area(),
 				"chao",
 			],
-            
+
 			"$": () => [
 				sprite("coin"),
 				area(),
 				anchor("bot"),
-				"coin",
+				"moeda",
 			],
 
-			"%": () => [
+			"#": () => [
 				sprite("portal"),
 				area(),
-				body({isStatic: true}),
 				anchor("bot"),
 				"portal",
 			],
@@ -74,99 +72,94 @@ scene("game", ({levelIdx, score}) => {
 			">": () => [
 				sprite("spike"),
 				area(),
-				body({isStatic: true}),
 				anchor("bot"),
-				"spike",
-			]
+				"espinho",
+			],
 		}
 	})
 
-	
-
-	const avatar = fase.get("avatar")[0]
+	const jogador = painel.get("avatar")[0]
 
 	function pular(){
-		if(avatar.isGrounded()){
-			avatar.jump()
+		if(jogador.isGrounded()){
+			jogador.jump()
 		}
 	}
 
-	var velocidade = 400;
+	const movimento = 400;
 
 	onKeyDown("right", () => {
-		avatar.move(velocidade, 0)
+		jogador.move(movimento, 0)
 	})
 
 	onKeyDown("left", () => {
-		avatar.move(-velocidade, 0)
+		jogador.move(-movimento, 0)
+	})
+
+	const pontuacao = add([
+		text(pontos),
+		pos(12, 12)
+	])
+
+	jogador.onCollide("moeda", (moeda) => {
+		destroy(moeda);
+		pontos++;
+		pontuacao.text = pontos;
+		play("bell")
+	})
+	
+	jogador.onCollide("portal", () => {
+		play("cano")
+
+		if(nivel_fase < FASES.length - 1){
+			go("game", {
+				nivel_fase: nivel_fase +  1,
+				pontos: pontos
+			})
+		}else{
+			go("vitoria", (pontos))
+		}
+	})
+
+	jogador.onCollide("espinho", () => {
+		go("derrota")
+	})
+
+	jogador.onUpdate(() => {
+		if(jogador.pos.y > 480){
+			go("derrota")
+		}
+	})
+
+	scene("derrota", () => {
+		add([
+			text("Voce Perdeu"),
+			pos(12)
+		])
+
+		onKeyPress(iniciar)
+	})
+
+
+	scene("vitoria", (pontos) => {
+		add([
+			text("Voce Venceu e ganhou "  + pontos + "moedas"),
+			pos(12)
+		])
+
+		play("up")
+
+		onKeyPress(iniciar)
 	})
 
 	onKeyDown("space", pular)
-
-	avatar.onUpdate(() => {
-		if (avatar.pos.y >= 480) {
-			go("lose")
-		}
-	})
-
-	avatar.onCollide("spike", (spike) => {
-		go("lose")
-	})
-
-	let scoreLabel = add([
-		text(score),
-		pos(12, 12),
-	])
-
-	avatar.onCollide("coin", (coin) => {
-		destroy(coin)
-		score++;
-		scoreLabel.text = score;
-		play("bell")
-	})
-
-	avatar.onCollide("portal", () => {
-		play("cano")
-
-		if(levelIdx < FASES.length - 1){
-			go("game", {
-				levelIdx: levelIdx + 1,
-				score: score,
-			})
-		}else{
-			go("vitoria", {score: score})
-		}
-	})
-	
-	scene("lose", () => {
-
-		add([
-			text("You Lose"),
-			pos(12),
-		])
-	
-		// Press any key to go back
-		onKeyPress(comecar)
-	
-	})
-
-	scene("vitoria", ({score}) => {
-		add([
-			text("Voce Ganhou " + score + " moedas"),
-			pos(12)
-		])
-       
-		play("up")
-		onKeyPress(comecar)
-	})
-	
 })
 
-function comecar(){
+function iniciar(){
 	go("game", {
-		levelIdx: 0,
-		score: 0,
+		nivel_fase: 0,
+		pontos: 0,
 	})
 }
 
-comecar()
+iniciar()
