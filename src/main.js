@@ -14,44 +14,52 @@ loadSound("up", "/sounds/levelup.mp3")
 
 setGravity(2400)
 
-const FASES = [
+const andar = 400;
+
+
+const LEVELS = [
 	[
-		"@  > $$$$$$$$ #",
-		"===============",
+		"@ > $$$$ > $$$$$ #",
+		"==================",
 	],
 
 	[
-		"@ > $$$ > $$$$$$$ #",
-		"==================="
+		"@ $$$ $$$$",
+		"====>====>$$$$$$ #",
+		"==========================",
 	],
 
 	[
-		"@ $ $ ",
-		"= = = =#",
-		"========",
+		"@ $$$ > $$$$$ #",
+		"======= ========",
+	],
+
+	[
+		"@    #",
+		"=======",
 	],
 ]
 
-scene("game", ({nivel_fase, pontos}) => {
-	const painel = addLevel(FASES[nivel_fase || 0], {
-		tileWidth: 64,
-		tileHeight: 64,
-		pos: vec2(300, 200),
+scene("jogo", ({nivel, pontos}) => {
+	const fases = addLevel(LEVELS[nivel || 0], {
+		tileWidth: 65,
+		tileHeight: 65,
+		pos: vec2(200, 220),
 
-        tiles: {
+		tiles: {
 			"@": () => [
 				sprite("bean"),
 				area(),
 				body(),
 				anchor("bot"),
-				"avatar",
+				"jogador",
 			],
 
 			"=": () => [
 				sprite("grass"),
+				area(),
 				body({isStatic: true}),
 				anchor("bot"),
-				area(),
 				"chao",
 			],
 
@@ -65,6 +73,7 @@ scene("game", ({nivel_fase, pontos}) => {
 			"#": () => [
 				sprite("portal"),
 				area(),
+				body(),
 				anchor("bot"),
 				"portal",
 			],
@@ -72,57 +81,59 @@ scene("game", ({nivel_fase, pontos}) => {
 			">": () => [
 				sprite("spike"),
 				area(),
+				body({isStatic: true}),
 				anchor("bot"),
 				"espinho",
 			],
 		}
 	})
 
-	const jogador = painel.get("avatar")[0]
+	const jogador = fases.get("jogador")[0]
 
-	function pular(){
+	const andar = 400;
+
+	function pulo(){
 		if(jogador.isGrounded()){
 			jogador.jump()
 		}
 	}
 
-	const movimento = 400;
+	var pontuacao = add([
+		text(pontos),
+		pos(12),
+	])
+
+	onKeyPress("space", pulo)
 
 	onKeyDown("right", () => {
-		jogador.move(movimento, 0)
+		jogador.move(andar, 0)
 	})
 
 	onKeyDown("left", () => {
-		jogador.move(-movimento, 0)
-	})
-
-	const pontuacao = add([
-		text(pontos),
-		pos(12, 12)
-	])
-
-	jogador.onCollide("moeda", (moeda) => {
-		destroy(moeda);
-		pontos++;
-		pontuacao.text = pontos;
-		play("bell")
-	})
-	
-	jogador.onCollide("portal", () => {
-		play("cano")
-
-		if(nivel_fase < FASES.length - 1){
-			go("game", {
-				nivel_fase: nivel_fase +  1,
-				pontos: pontos
-			})
-		}else{
-			go("vitoria", (pontos))
-		}
+		jogador.move(-andar, 0)
 	})
 
 	jogador.onCollide("espinho", () => {
 		go("derrota")
+	})
+
+	jogador.onCollide("moeda", (moeda) => {
+		destroy(moeda)
+		play("bell")
+		pontos++;
+		pontuacao.text = pontos;
+	})
+
+	jogador.onCollide("portal", () => {
+		play("cano")
+		if(nivel < LEVELS.length -1){
+			go("jogo", {
+				nivel: nivel + 1,
+				pontos: pontos,
+			})
+		}else{
+			go("vitoria")
+		}
 	})
 
 	jogador.onUpdate(() => {
@@ -137,29 +148,26 @@ scene("game", ({nivel_fase, pontos}) => {
 			pos(12)
 		])
 
-		onKeyPress(iniciar)
+		onKeyPress(comecarJogo)
+
 	})
 
-
-	scene("vitoria", (pontos) => {
+	scene("vitoria", () => {
+		play("up")
 		add([
-			text("Voce Venceu e ganhou "  + pontos + "moedas"),
+			text("Voce Venceu!"),
 			pos(12)
 		])
 
-		play("up")
-
-		onKeyPress(iniciar)
+		onKeyPress(comecarJogo)
 	})
-
-	onKeyDown("space", pular)
 })
 
-function iniciar(){
-	go("game", {
-		nivel_fase: 0,
+function comecarJogo(){
+	go("jogo", {
+		nivel: 0,
 		pontos: 0,
 	})
 }
 
-iniciar()
+comecarJogo()
