@@ -1,173 +1,289 @@
 import kaboom from "kaboom"
 
-kaboom()
+kaboom({
+	background: [141, 183, 255],
+})
 
+// load assets
 loadSprite("bean", "/sprites/bean.png")
-loadSprite("coin", "/sprites/coin.png")
+loadSprite("bag", "/sprites/bag.png")
+loadSprite("ghosty", "/sprites/ghosty.png")
 loadSprite("spike", "/sprites/spike.png")
 loadSprite("grass", "/sprites/grass.png")
-loadSprite("ghosty", "/sprites/ghosty.png")
+loadSprite("steel", "/sprites/steel.png")
+loadSprite("prize", "/sprites/jumpy.png")
+loadSprite("apple", "/sprites/apple.png")
 loadSprite("portal", "/sprites/portal.png")
+loadSprite("coin", "/sprites/coin.png")
 loadSound("bell", "/sounds/bell.mp3")
-loadSound("cano", "/sounds/cano.mp3")
-loadSound("up", "/sounds/levelup.mp3")
+loadSound("powerup", "/sounds/powerup.mp3")
+loadSound("blip", "/examples/sounds/blip.mp3")
+loadSound("hit", "/examples/sounds/hit.mp3")
+loadSound("portal", "/sounds/cano.mp3")
+
+const JUMP_FORCE = 1320
+const MOVE_SPEED = 480
+const FALL_DEATH = 2400
 
 setGravity(2400)
 
-const andar = 400;
+function patrol(speed = 60, dir = 1){
+	return{
+		id:"patrol",
+		require: ["pos", "area"],
 
+		add(){
+			this.on("collide", (obj, col) => {
+				if(col.isLeft() || col.isRight()){
+					dir = -dir
+				}
+			})
+		},
+		update(){
+			this.move(speed * dir, 0)
+		}
+	}
+}
+
+function big(){
+	let time = 0;
+	let isBig = false;
+	let deatScale = 1;
+
+	
+}
 
 const LEVELS = [
 	[
-		"@ > $$$$ > $$$$$ #",
-		"==================",
+		"    0       ",
+		"   --       ",
+		"       $$   ",
+		" %    ===   ",
+		"            ",
+		"   ^  > = @",
+	"===================",
+	],
+	[
+		"                          $",
+		"                          $",
+		"                          $",
+		"                          $",
+		"                          $",
+		"           $$         =   $",
+		"  %      ====         =   $",
+		"                      =   $",
+		"                      =    ",
+		"       ^^      = >    =   @",
+		"===========================",
+	],
+	[
+		"     $    $    $    $     $",
+		"     $    $    $    $     $",
+		"                           ",
+		"                           ",
+		"                           ",
+		"                           ",
+		"                           ",
+		" ^^^^>^^^^>^^^^>^^^^>^^^^^@",
+		"===========================",
 	],
 
 	[
-		"@ $$$ $$$$",
-		"====>====>$$$$$$ #",
-		"==========================",
-	],
-
-	[
-		"@ $$$ > $$$$$ #",
-		"======= ========",
-	],
-
-	[
-		"@    #",
-		"=======",
-	],
+		"  %$$     $$$    $$$   @",
+		"  ==  >  ===  > === ====",
+		"============================",
+	]
 ]
 
-scene("jogo", ({nivel, pontos}) => {
-	const fases = addLevel(LEVELS[nivel || 0], {
-		tileWidth: 65,
-		tileHeight: 65,
-		pos: vec2(200, 220),
+const levelConf = {
+	tileWidth: 64,
+	tileHeight: 64,
 
-		tiles: {
-			"@": () => [
-				sprite("bean"),
-				area(),
-				body(),
-				anchor("bot"),
-				"jogador",
-			],
+	tiles: {
+		"=": () => [
+			sprite("grass"),
+			area(),
+			body({isStatic: true}),
+			anchor("bot"),
+			"plataform",
+		],
 
-			"=": () => [
-				sprite("grass"),
-				area(),
-				body({isStatic: true}),
-				anchor("bot"),
-				"chao",
-			],
+		"-": () => [
+			sprite("steel"),
+			area(),
+			body({isStatic: true}),
+			anchor("bot"),
+		],
 
-			"$": () => [
-				sprite("coin"),
-				area(),
-				anchor("bot"),
-				"moeda",
-			],
+		"0": () => [
+			sprite("bag"),
+			area(),
+			body({isStatic: true}),
+			anchor("bot"),
+		],
 
-			"#": () => [
-				sprite("portal"),
-				area(),
-				body(),
-				anchor("bot"),
-				"portal",
-			],
+		"$": () => [
+			sprite("coin"),
+			area(),
+			pos(0, -9),
+			anchor("bot"),
+			"coin",
+		],
 
-			">": () => [
-				sprite("spike"),
-				area(),
-				body({isStatic: true}),
-				anchor("bot"),
-				"espinho",
-			],
+		"%": () => [
+			sprite("prize"),
+			area(),
+			body({ isStatic: true }),
+			anchor("bot"),
+			offscreen({ hide: true }),
+			"prize",
+		],
+		"^": () => [
+			sprite("spike"),
+			area(),
+			body({ isStatic: true }),
+			anchor("bot"),
+			offscreen({ hide: true }),
+			"danger",
+		],
+
+		"#": () => [
+			sprite("apple"),
+			area(),
+			anchor("bot"),
+			body(),
+			"apple",
+		],
+		">": () => [
+			sprite("ghosty"),
+			area(),
+			anchor("bot"),
+			body(),
+			patrol(),
+			"enemy",
+		],
+		"@": () => [
+			sprite("portal"),
+			area({ scale: 0.5 }),
+			anchor("bot"),
+			pos(0, -12),
+			"portal",
+		],
+	}
+}
+
+scene("game", ({levelIdx, coins} = {levelIdx: 0, coins: 0}) => {
+
+	const level = addLevel(LEVELS[levelIdx ?? 0], levelConf)
+
+	const player = add([
+		sprite("bean"),
+		pos(0, 10),
+		area(),
+		scale(1),
+		// makes it fall to gravity and jumpable
+		body(),
+		// the custom component we defined above
+		//big(),
+		anchor("bot"),
+	])
+
+	player.onUpdate(() => {
+		// center camera to player
+		camPos(player.pos)
+		// check fall death
+		if (player.pos.y >= FALL_DEATH) {
+			go("derrota")
 		}
 	})
 
-	const jogador = fases.get("jogador")[0]
-
-	const andar = 400;
-
-	function pulo(){
-		if(jogador.isGrounded()){
-			jogador.jump()
+	function jump(){
+		if(player.isGrounded()){
+			player.jump(1000)
 		}
 	}
 
-	var pontuacao = add([
-		text(pontos),
-		pos(12),
-	])
-
-	onKeyPress("space", pulo)
-
 	onKeyDown("right", () => {
-		jogador.move(andar, 0)
+		player.move(MOVE_SPEED, 0)
 	})
 
 	onKeyDown("left", () => {
-		jogador.move(-andar, 0)
+		player.move(-MOVE_SPEED, 0)
 	})
 
-	jogador.onCollide("espinho", () => {
-		go("derrota")
+
+	let coinsLabel = add([
+		text(coins),
+		pos(12),
+		fixed(),
+	])
+
+	player.onCollide("coin", (coin) => {
+		coins++;
+		destroy(coin);
+		play("bell");
+		coinsLabel.text =  coins;
 	})
 
-	jogador.onCollide("moeda", (moeda) => {
-		destroy(moeda)
-		play("bell")
-		pontos++;
-		pontuacao.text = pontos;
-	})
-
-	jogador.onCollide("portal", () => {
-		play("cano")
-		if(nivel < LEVELS.length -1){
-			go("jogo", {
-				nivel: nivel + 1,
-				pontos: pontos,
+	player.onCollide("portal", () => {
+		if(levelIdx + 1 < LEVELS.length){
+			go("game", {
+				levelIdx: levelIdx + 1,
+				coins: coins,
 			})
 		}else{
 			go("vitoria")
 		}
 	})
+	
+	player.onGround((l) => {
+		if(l.is("enemy")){
+			player.jump(JUMP_FORCE * 1.5)
+			destroy(l)
+			addKaboom(l.pos)
+			burp()
+		}
+	})
 
-	jogador.onUpdate(() => {
-		if(jogador.pos.y > 480){
+	player.onCollide("danger", () => {
+		go("derrota")
+	})
+
+	player.onCollide("enemy", (e, col) => {
+		if(!col.isBottom()){
 			go("derrota")
 		}
 	})
 
-	scene("derrota", () => {
-		add([
-			text("Voce Perdeu"),
-			pos(12)
-		])
-
-		onKeyPress(comecarJogo)
-
+	player.onHeadbutt((obj) => {
+		if(obj.is("prize") ){
+			const apple = level.spawn("#", obj.tilePos.sub(0, 1))
+			apple.jump()
+		}
 	})
 
-	scene("vitoria", () => {
-		play("up")
-		add([
-			text("Voce Venceu!"),
-			pos(12)
-		])
-
-		onKeyPress(comecarJogo)
+	player.onCollide((apple) => {
+		
 	})
+
+
+	onKeyPress("space", jump)
 })
 
-function comecarJogo(){
-	go("jogo", {
-		nivel: 0,
-		pontos: 0,
-	})
-}
+scene("derrota",() => {
+	add([
+		text("Voce Perdeu")
+	])
 
-comecarJogo()
+	onKeyPress(() => go("game"))
+})
+
+scene("vitoria",() => {
+	add([
+		text("Voce Venceu")
+	])
+
+	onKeyPress(() => go("game"))
+})
+
+go("game")
