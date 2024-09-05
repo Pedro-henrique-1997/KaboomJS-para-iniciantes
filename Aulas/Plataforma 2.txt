@@ -1,3 +1,107 @@
+//Funcoes de comportamento
+
+function patrol(speed = 60, dir = 1) {
+	return {
+		id: "patrol",
+		require: [ "pos", "area" ],
+		add() {
+			this.on("collide", (obj, col) => {
+				if (col.isLeft() || col.isRight()) {
+					dir = -dir
+				}
+			})
+		},
+		update() {
+			this.move(speed * dir, 0)
+		},
+	}
+}
+
+// custom component that makes stuff grow big
+function big() {
+	let timer = 0
+	let isBig = false
+	let destScale = 1
+	return {
+		// component id / name
+		id: "big",
+		// it requires the scale component
+		require: [ "scale" ],
+		// this runs every frame
+		update() {
+			if (isBig) {
+				timer -= dt()
+				if (timer <= 0) {
+					this.smallify()
+				}
+			}
+			this.scale = this.scale.lerp(vec2(destScale), dt() * 6)
+		},
+		// custom methods
+		isBig() {
+			return isBig
+		},
+		smallify() {
+			destScale = 1
+			timer = 0
+			isBig = false
+		},
+		biggify(time) {
+			destScale = 2
+			timer = time
+			isBig = true
+		},
+	}
+}
+
+colisões com o inimigo
+
+player.onGround((l) => {
+		if (l.is("enemy")) {
+			player.jump(JUMP_FORCE * 1.5)
+			destroy(l)
+			addKaboom(player.pos)
+			play("powerup")
+		}
+	})
+
+	player.onCollide("enemy", (e, col) => {
+		// if it's not from the top, die
+		if (!col.isBottom()) {
+			go("derrota")
+			play("hit")
+		}
+	})
+
+
+batendo na caixa e saindo a maçã
+
+let hasApple = false
+
+	// grow an apple if player's head bumps into an obj with "prize" tag
+	player.onHeadbutt((obj) => {
+		if (obj.is("prize") && !hasApple) {
+			const apple = fase.spawn("#", obj.tilePos.sub(0, 1))
+			apple.jump()
+			hasApple = true
+			play("blip")
+		}
+	})
+
+colidindo com a maçã
+
+player.onCollide("apple", (a) => {
+		destroy(a)
+		// as we defined in the big() component
+		player.biggify(3)
+		hasApple = false
+		play("powerup")
+	})
+
+//////////////////////////////////////////////////////////////////////////////////////////////////////////////////////////
+
+Pedaço do código para usar 
+
 import kaboom from "kaboom"
 
 kaboom({
@@ -24,60 +128,8 @@ loadSound("bell", "/sounds/bell.mp3")
 
 //Funcoes de comportamento
 
-function patrol(speed = 60, dir = 1){
-	return{
-		id:"patrol",
-		require: ["pos", "area"],
-		add(){
-			this.on("collide", (obj, col) => {
-				if(col.isLeft() || col.isRight()){
-                    dir = -dir
-				}
-			})
-		},
 
-		update(){
-			this.move(speed * dir, 0)
-		}
-	}
-}
 
-function big(){
-	let timer = 0
-	let isBig = false
-	let destScale = 1
-	return {
-		id: "big",
-		require: ["scale"],
-
-		update(){
-			if(isBig){
-				timer -= dt()
-				if(timer <= 0){
-					this.smallify()
-				}
-			}
-
-			this.scale = this.scale.lerp(vec2(destScale), dt() * 6)
-		},
-
-		isBig(){
-			return isBig
-		},
-
-		smallify(){
-			destScale = 1
-			isBig = false
-            timer = 0
-		},
-
-		biggify(time){
-           destScale = 2
-		   timer = time
-		   isBig =  true
-		}
-	}
-}
 
 const FASES = [
 	[
@@ -184,7 +236,7 @@ scene("game", ({nivel, pontos}) => {
 				area(),
 				anchor("bot"),
 				body(),
-				patrol(),
+				//patrol(),
 				offscreen({ hide: true }),
 				"enemy",
 			],
@@ -208,7 +260,7 @@ scene("game", ({nivel, pontos}) => {
 		// makes it fall to gravity and jumpable
 		body(),
 		// the custom component we defined above
-		big(),
+		//big(),
 		anchor("bot"),
 	])
 
@@ -265,39 +317,9 @@ scene("game", ({nivel, pontos}) => {
 		}
 	})
 
-	let hasApple = false
-
-	player.onHeadbutt((obj) => {
-		if(obj.is("prize") && !hasApple){
-			const apple = fase.spawn("#", obj.tilePos.sub(0, 1))
-			apple.jump()
-			hasApple = true
-		}
-	})
-
-	player.onCollide("apple", (a) => {
-		destroy(a)
-		player.biggify(3)
-		hasApple = false
-	})
-
 
 	player.onCollide("espinho", () => {
 		go("derrota")
-	})
-
-	player.onGround((l) => {
-		if(l.is("enemy")){
-			player.jump(JUMP_FORCE * 1.5)
-			destroy(l)
-			addKaboom(player.pos)
-		}
-	})
-
-	player.onCollide("enemy",(l, col) => {
-		if(!col.isBottom()){
-			go("derrota")
-		}
 	})
 
 
