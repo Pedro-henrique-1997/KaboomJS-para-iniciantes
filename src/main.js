@@ -25,13 +25,13 @@ loadSound("bell", "/sounds/bell.mp3")
 //Funcoes de comportamento
 
 function patrol(speed = 60, dir = 1){
-	return{
+	return {
 		id:"patrol",
-		require: ["pos", "area"],
+	    require: ["pos", "area"],
 		add(){
 			this.on("collide", (obj, col) => {
 				if(col.isLeft() || col.isRight()){
-                    dir = -dir
+					dir = -dir;
 				}
 			})
 		},
@@ -46,6 +46,7 @@ function big(){
 	let timer = 0
 	let isBig = false
 	let destScale = 1
+
 	return {
 		id: "big",
 		require: ["scale"],
@@ -67,14 +68,14 @@ function big(){
 
 		smallify(){
 			destScale = 1
+			timer = 0
 			isBig = false
-            timer = 0
 		},
 
 		biggify(time){
-           destScale = 2
-		   timer = time
-		   isBig =  true
+			destScale = 2
+			timer = time
+			isBig = true
 		}
 	}
 }
@@ -265,39 +266,39 @@ scene("game", ({nivel, pontos}) => {
 		}
 	})
 
+	player.onGround((l) => {
+		if(l.is("enemy")){
+			destroy(l)
+			player.jump(JUMP_FORCE * 1.6)
+			addKaboom(player.pos)
+		}
+	})
+
+	player.onCollide("enemy", (e, col) => {
+		if(!col.isBottom()){
+			go("derrota")
+		}
+	})
+
 	let hasApple = false
 
 	player.onHeadbutt((obj) => {
 		if(obj.is("prize") && !hasApple){
 			const apple = fase.spawn("#", obj.tilePos.sub(0, 1))
-			apple.jump()
 			hasApple = true
+			apple.jump()
 		}
 	})
 
-	player.onCollide("apple", (a) => {
-		destroy(a)
-		player.biggify(3)
+	player.onCollide("apple", (apple) => {
+		destroy(apple)
+		player.biggify(4)
 		hasApple = false
 	})
 
 
 	player.onCollide("espinho", () => {
 		go("derrota")
-	})
-
-	player.onGround((l) => {
-		if(l.is("enemy")){
-			player.jump(JUMP_FORCE * 1.5)
-			destroy(l)
-			addKaboom(player.pos)
-		}
-	})
-
-	player.onCollide("enemy",(l, col) => {
-		if(!col.isBottom()){
-			go("derrota")
-		}
 	})
 
 
