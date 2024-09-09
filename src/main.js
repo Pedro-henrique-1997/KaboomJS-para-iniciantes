@@ -26,12 +26,13 @@ loadSound("bell", "/sounds/bell.mp3")
 
 function patrol(speed = 60, dir = 1){
 	return {
-		id:"patrol",
-	    require: ["pos", "area"],
+		id: "patrol",
+		require: ["pos", "area"],
+
 		add(){
 			this.on("collide", (obj, col) => {
 				if(col.isLeft() || col.isRight()){
-					dir = -dir;
+					dir = -dir
 				}
 			})
 		},
@@ -42,43 +43,6 @@ function patrol(speed = 60, dir = 1){
 	}
 }
 
-function big(){
-	let timer = 0
-	let isBig = false
-	let destScale = 1
-
-	return {
-		id: "big",
-		require: ["scale"],
-
-		update(){
-			if(isBig){
-				timer -= dt()
-				if(timer <= 0){
-					this.smallify()
-				}
-			}
-
-			this.scale = this.scale.lerp(vec2(destScale), dt() * 6)
-		},
-
-		isBig(){
-			return isBig
-		},
-
-		smallify(){
-			destScale = 1
-			timer = 0
-			isBig = false
-		},
-
-		biggify(time){
-			destScale = 2
-			timer = time
-			isBig = true
-		}
-	}
-}
 
 const FASES = [
 	[
@@ -209,7 +173,7 @@ scene("game", ({nivel, pontos}) => {
 		// makes it fall to gravity and jumpable
 		body(),
 		// the custom component we defined above
-		big(),
+		//big(),
 		anchor("bot"),
 	])
 
@@ -244,15 +208,17 @@ scene("game", ({nivel, pontos}) => {
 		fixed(),
 	])
 
+	player.onUpdate(() => {
+		camPos(player.pos)
+	})
+
+	//Colisões
+
 	player.onCollide("moeda", (moeda) => {
 		destroy(moeda);
 		pontos++;
 		pontosLabel.text = pontos;
 		play("bell")
-	})
-
-	player.onUpdate(() => {
-		camPos(player.pos)
 	})
 
 	player.onCollide("portal", () => {
@@ -266,36 +232,20 @@ scene("game", ({nivel, pontos}) => {
 		}
 	})
 
-	player.onGround((l) => {
-		if(l.is("enemy")){
-			destroy(l)
-			player.jump(JUMP_FORCE * 1.6)
+	player.onGround((obj) => {
+		if(obj.is("enemy")){
+			player.jump(JUMP_FORCE  * 1.5)
+			destroy(obj)
 			addKaboom(player.pos)
 		}
 	})
 
-	player.onCollide("enemy", (e, col) => {
+	player.onCollide("enemy",(e, col) => {
 		if(!col.isBottom()){
 			go("derrota")
 		}
 	})
-
-	let hasApple = false
-
-	player.onHeadbutt((obj) => {
-		if(obj.is("prize") && !hasApple){
-			const apple = fase.spawn("#", obj.tilePos.sub(0, 1))
-			hasApple = true
-			apple.jump()
-		}
-	})
-
-	player.onCollide("apple", (apple) => {
-		destroy(apple)
-		player.biggify(4)
-		hasApple = false
-	})
-
+	
 
 	player.onCollide("espinho", () => {
 		go("derrota")
