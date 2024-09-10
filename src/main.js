@@ -43,6 +43,43 @@ function patrol(speed = 60, dir = 1){
 	}
 }
 
+function big(){
+	let timer = 0
+	let isBig = false
+	let destScale = 1
+
+	return {
+		id: "big",
+		require: ["scale"],
+
+		update(){
+			if(isBig){
+				timer -= dt()
+				if(timer <= 0){
+					this.smalliffy()
+				}
+			}
+
+			this.scale = this.scale.lerp(vec2(destScale), dt() * 6)
+		},
+
+		isBig(){
+			isBig = true
+		},
+
+		smalliffy(){
+			destScale = 1
+			timer = 0
+			isBig = false
+		},
+
+		biggiffy(time){
+			destScale = 2
+			timer = time
+			isBig = true
+		}
+	}
+}
 
 const FASES = [
 	[
@@ -173,7 +210,7 @@ scene("game", ({nivel, pontos}) => {
 		// makes it fall to gravity and jumpable
 		body(),
 		// the custom component we defined above
-		//big(),
+		big(),
 		anchor("bot"),
 	])
 
@@ -238,6 +275,22 @@ scene("game", ({nivel, pontos}) => {
 			destroy(obj)
 			addKaboom(player.pos)
 		}
+	})
+
+	let hasApple = false
+
+	player.onHeadbutt((obj) => {
+		if(obj.is("prize") && !hasApple){
+			const apple = fase.spawn("#", obj.tilePos.sub(0, 1))
+			apple.jump()
+			hasApple = true
+		}
+	})
+
+	player.onCollide("apple", (obj) => {
+		destroy(obj)
+		hasApple = false
+		player.biggiffy(3)
 	})
 
 	player.onCollide("enemy",(e, col) => {
