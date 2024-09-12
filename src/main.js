@@ -27,59 +27,20 @@ loadSound("bell", "/sounds/bell.mp3")
 function patrol(speed = 60, dir = 1){
 	return {
 		id: "patrol",
-		require: ["pos", "area"],
-
-		add(){
+		require: [ "pos", "area" ],
+		add() {
 			this.on("collide", (obj, col) => {
-				if(col.isLeft() || col.isRight()){
+				if (col.isLeft() || col.isRight()) {
 					dir = -dir
 				}
 			})
 		},
-
-		update(){
+		update() {
 			this.move(speed * dir, 0)
-		}
+		},
 	}
 }
 
-function big(){
-	let timer = 0
-	let isBig = false
-	let destScale = 1
-
-	return {
-		id: "big",
-		require: ["scale"],
-
-		update(){
-			if(isBig){
-				timer -= dt()
-				if(timer <= 0){
-					this.smalliffy()
-				}
-			}
-
-			this.scale = this.scale.lerp(vec2(destScale), dt() * 6)
-		},
-
-		isBig(){
-			isBig = true
-		},
-
-		smalliffy(){
-			destScale = 1
-			timer = 0
-			isBig = false
-		},
-
-		biggiffy(time){
-			destScale = 2
-			timer = time
-			isBig = true
-		}
-	}
-}
 
 const FASES = [
 	[
@@ -210,7 +171,7 @@ scene("game", ({nivel, pontos}) => {
 		// makes it fall to gravity and jumpable
 		body(),
 		// the custom component we defined above
-		big(),
+		//big(),
 		anchor("bot"),
 	])
 
@@ -245,17 +206,15 @@ scene("game", ({nivel, pontos}) => {
 		fixed(),
 	])
 
-	player.onUpdate(() => {
-		camPos(player.pos)
-	})
-
-	//Colisões
-
 	player.onCollide("moeda", (moeda) => {
 		destroy(moeda);
 		pontos++;
 		pontosLabel.text = pontos;
 		play("bell")
+	})
+
+	player.onUpdate(() => {
+		camPos(player.pos)
 	})
 
 	player.onCollide("portal", () => {
@@ -269,41 +228,24 @@ scene("game", ({nivel, pontos}) => {
 		}
 	})
 
-	player.onGround((obj) => {
-		if(obj.is("enemy")){
-			player.jump(JUMP_FORCE  * 1.5)
-			destroy(obj)
-			addKaboom(player.pos)
-		}
-	})
-
-	let hasApple = false
-
-	player.onHeadbutt((obj) => {
-		if(obj.is("prize") && !hasApple){
-			const apple = fase.spawn("#", obj.tilePos.sub(0, 1))
-			apple.jump()
-			hasApple = true
-		}
-	})
-
-	player.onCollide("apple", (obj) => {
-		destroy(obj)
-		hasApple = false
-		player.biggiffy(3)
-	})
-
-	player.onCollide("enemy",(e, col) => {
-		if(!col.isBottom()){
-			go("derrota")
-		}
-	})
-	
 
 	player.onCollide("espinho", () => {
 		go("derrota")
 	})
 
+	player.onGround((col) => {
+		if(col.is("enemy")){
+			destroy(col)
+			addKaboom(player.pos)
+			player.jump(JUMP_FORCE * 1.5)
+		}
+	})
+
+	player.onCollide("enemy", (e, col) => {
+		if(!col.isBottom()){
+			go("derrota")
+		}
+	})
 
 	// grow an apple if player's head bumps into an obj with "prize" tag
 	
