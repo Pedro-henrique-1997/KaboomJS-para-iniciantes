@@ -27,17 +27,18 @@ loadSound("bell", "/sounds/bell.mp3")
 function patrol(speed = 60, dir = 1){
 	return {
 		id: "patrol",
-		require: [ "pos", "area" ],
-		add() {
-			this.on("collide", (obj, col) => {
-				if (col.isLeft() || col.isRight()) {
+		require: ["pos", "area"],
+		add(){
+			this.on("collide", (pos, col) => {
+				if(col.isLeft() || col.isRight()){
 					dir = -dir
 				}
 			})
 		},
-		update() {
-			this.move(speed * dir, 0)
-		},
+
+		update(){
+           this.move(speed * dir, 0)
+		}
 	}
 }
 
@@ -228,16 +229,11 @@ scene("game", ({nivel, pontos}) => {
 		}
 	})
 
-
-	player.onCollide("espinho", () => {
-		go("derrota")
-	})
-
-	player.onGround((col) => {
-		if(col.is("enemy")){
-			destroy(col)
-			addKaboom(player.pos)
+	player.onGround((l) => {
+		if(l.is("enemy")){
 			player.jump(JUMP_FORCE * 1.5)
+			addKaboom(player.pos)
+            destroy(l)
 		}
 	})
 
@@ -246,6 +242,12 @@ scene("game", ({nivel, pontos}) => {
 			go("derrota")
 		}
 	})
+
+
+	player.onCollide("espinho", () => {
+		go("derrota")
+	})
+
 
 	// grow an apple if player's head bumps into an obj with "prize" tag
 	
