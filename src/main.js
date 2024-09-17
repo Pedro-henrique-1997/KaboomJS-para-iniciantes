@@ -25,9 +25,10 @@ loadSound("bell", "/sounds/bell.mp3")
 //Funcoes de comportamento
 
 function patrol(speed = 60, dir = 1){
-	return {
+	return{
 		id: "patrol",
 		require: ["pos", "area"],
+		
 		add(){
 			this.on("collide", (pos, col) => {
 				if(col.isLeft() || col.isRight()){
@@ -37,7 +38,7 @@ function patrol(speed = 60, dir = 1){
 		},
 
 		update(){
-           this.move(speed * dir, 0)
+			this.move(speed * dir, 0)
 		}
 	}
 }
@@ -207,6 +208,20 @@ scene("game", ({nivel, pontos}) => {
 		fixed(),
 	])
 
+	player.onGround((col) => {
+		if(col.is("enemy")){
+			player.jump(JUMP_FORCE * 1.5)
+			addKaboom(player.pos)
+			destroy(col)
+		}
+	})
+
+	player.onCollide("enemy", (e, col) => {
+		if(!col.isBottom()){
+			go("derrota")
+		}
+	})
+
 	player.onCollide("moeda", (moeda) => {
 		destroy(moeda);
 		pontos++;
@@ -214,9 +229,9 @@ scene("game", ({nivel, pontos}) => {
 		play("bell")
 	})
 
-	player.onUpdate(() => {
-		camPos(player.pos)
-	})
+player.onUpdate(() => {
+	camPos(player.pos)
+})
 
 	player.onCollide("portal", () => {
 		if(nivel < FASES.length - 1){
@@ -226,20 +241,6 @@ scene("game", ({nivel, pontos}) => {
 			})
 		}else{
 			go("Vitoria", {pontos: pontos})
-		}
-	})
-
-	player.onGround((l) => {
-		if(l.is("enemy")){
-			player.jump(JUMP_FORCE * 1.5)
-			addKaboom(player.pos)
-            destroy(l)
-		}
-	})
-
-	player.onCollide("enemy", (e, col) => {
-		if(!col.isBottom()){
-			go("derrota")
 		}
 	})
 
