@@ -26,9 +26,8 @@ loadSound("bell", "/sounds/bell.mp3")
 
 function patrol(speed = 60, dir = 1){
 	return{
-		id: "patrol",
+		id:"patrol",
 		require: ["pos", "area"],
-		
 		add(){
 			this.on("collide", (pos, col) => {
 				if(col.isLeft() || col.isRight()){
@@ -208,20 +207,6 @@ scene("game", ({nivel, pontos}) => {
 		fixed(),
 	])
 
-	player.onGround((col) => {
-		if(col.is("enemy")){
-			player.jump(JUMP_FORCE * 1.5)
-			addKaboom(player.pos)
-			destroy(col)
-		}
-	})
-
-	player.onCollide("enemy", (e, col) => {
-		if(!col.isBottom()){
-			go("derrota")
-		}
-	})
-
 	player.onCollide("moeda", (moeda) => {
 		destroy(moeda);
 		pontos++;
@@ -229,9 +214,9 @@ scene("game", ({nivel, pontos}) => {
 		play("bell")
 	})
 
-player.onUpdate(() => {
-	camPos(player.pos)
-})
+	player.onUpdate(() => {
+		camPos(player.pos)
+	})
 
 	player.onCollide("portal", () => {
 		if(nivel < FASES.length - 1){
@@ -244,6 +229,19 @@ player.onUpdate(() => {
 		}
 	})
 
+	player.onGround((col) => {
+		if(col.is("enemy")){
+			destroy(col)
+			addKaboom(player.pos)
+			player.jump(JUMP_FORCE * 1.5)
+		}
+	})
+
+	player.onCollide("enemy", (e, col) => {
+		if(!col.isBottom()){
+			go("derrota")
+		}
+	})
 
 	player.onCollide("espinho", () => {
 		go("derrota")
