@@ -1,3 +1,5 @@
+
+
 import kaboom from "kaboom"
 
 kaboom({
@@ -28,8 +30,9 @@ function big(){
 	let timer = 0
 	let isBig = false
 	let destScale = 1
+
 	return{
-		id:"big",
+		id: "big",
 		require: ["scale"],
 		update(){
 			if(isBig){
@@ -38,6 +41,7 @@ function big(){
 					this.smallify()
 				}
 			}
+
 			this.scale = this.scale.lerp(vec2(destScale), dt() * 6)
 		},
 
@@ -50,29 +54,11 @@ function big(){
 			timer = 0
 			isBig = false
 		},
-
-		biggify(time){
+		
+		biggiffy(time){
 			destScale = 2
-			timer = time
 			isBig = true
-		}
-	}
-}
-
-function patrol(speed = 60, dir = 1){
-	return {
-		id:"patrol",
-		require: ["pos", "area"],
-		add(){
-			this.on("collide", (obj, col) => {
-				if(col.isLeft() || col.isRight()){
-					dir = -dir
-				}
-			})			
-		},
-
-		update(){
-			this.move(speed * dir, 0)
+			timer = time
 		}
 	}
 }
@@ -182,7 +168,7 @@ scene("game", ({nivel, pontos}) => {
 				area(),
 				anchor("bot"),
 				body(),
-				patrol(),
+				//patrol(),
 				offscreen({ hide: true }),
 				"enemy",
 			],
@@ -263,20 +249,6 @@ scene("game", ({nivel, pontos}) => {
 		}
 	})
 
-	player.onGround((col) => {
-		if(col.is("enemy")){
-			player.jump(JUMP_FORCE * 1.5)
-			destroy(col)
-			addKaboom(player.pos)
-		}
-	})
-
-	player.onCollide("enemy", (col, e) => {
-		if(!e.isBottom()){
-			go("derrota")
-		}
-	})
-
 	let hasApple = false
 
 	player.onHeadbutt((obj) => {
@@ -287,10 +259,10 @@ scene("game", ({nivel, pontos}) => {
 		}
 	})
 
-	player.onCollide("apple",(a) => {
-		destroy(a)
-		player.biggify(3)
+	player.onCollide("apple", (obj) => {
+		destroy(obj)
 		hasApple = false
+		player.biggiffy(3)
 	})
 
 	player.onCollide("espinho", () => {
