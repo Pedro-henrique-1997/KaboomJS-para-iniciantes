@@ -1,5 +1,3 @@
-
-
 import kaboom from "kaboom"
 
 kaboom({
@@ -28,40 +26,42 @@ loadSound("bell", "/sounds/bell.mp3")
 
 function big(){
 	let timer = 0
-	let isBig = false
+    let isBig = false
 	let destScale = 1
-
-	return{
+	return {
 		id: "big",
 		require: ["scale"],
+
 		update(){
 			if(isBig){
 				timer -= dt()
 				if(timer <= 0){
-					this.smallify()
+					this.smalliffy()
 				}
 			}
 
 			this.scale = this.scale.lerp(vec2(destScale), dt() * 6)
+
 		},
 
 		isBig(){
 			return isBig
 		},
 
-		smallify(){
+		smalliffy(){
 			destScale = 1
 			timer = 0
 			isBig = false
 		},
-		
-		biggiffy(time){
+
+		biggify(time){
 			destScale = 2
-			isBig = true
 			timer = time
+			isBig = true
 		}
 	}
 }
+
 
 const FASES = [
 	[
@@ -259,11 +259,12 @@ scene("game", ({nivel, pontos}) => {
 		}
 	})
 
-	player.onCollide("apple", (obj) => {
-		destroy(obj)
+	player.onCollide("apple",(apple) => {
+		player.biggify(3)
+		destroy(apple)
 		hasApple = false
-		player.biggiffy(3)
 	})
+
 
 	player.onCollide("espinho", () => {
 		go("derrota")
