@@ -26,11 +26,13 @@ loadSound("bell", "/sounds/bell.mp3")
 
 function big(){
 	let timer = 0
+	let desScale = 1
 	let isBig = false
-	let destScale = 1
+
 	return {
 		id: "big",
 		require: ["scale"],
+
 		update(){
 			if(isBig){
 				timer -= dt()
@@ -39,23 +41,23 @@ function big(){
 				}
 			}
 
-			this.scale = this.scale.lerp(vec2(destScale), dt() * 6)
+			this.scale = this.scale.lerp(vec2(desScale), dt() * 6)
 		},
-
+        
 		isBig(){
 			return isBig
 		},
-
+		
 		smalliffy(){
-			destScale = 1
 			isBig = false
+			desScale = 1
 			timer = 0
 		},
 
-		biggiffy(time){
-			destScale = 2
-			isBig = true
+		bigiffy(time){
 			timer = time
+			desScale = 3
+			isBig = true
 		}
 	}
 }
@@ -236,22 +238,6 @@ scene("game", ({nivel, pontos}) => {
 		camPos(player.pos)
 	})
 
-	let hasApple = false
-
-	player.onHeadbutt((obj) => {
-		if(obj.is("prize") && !hasApple){
-			let maca = fase.spawn("#", obj.tilePos.sub(0, 1))
-		    maca.jump()
-		    hasApple = true
-		}
-	})
-
-	player.onCollide("apple", (obj) => {
-		destroy(obj)
-		player.biggiffy(3)
-		hasApple = false
-	})
-
 	player.onCollide("portal", () => {
 		if(nivel < FASES.length - 1){
 			go("game", {
@@ -263,6 +249,21 @@ scene("game", ({nivel, pontos}) => {
 		}
 	})
 
+	let obterMaca = false
+
+	player.onHeadbutt((obj) => {
+		if(obj.is("prize") && !obterMaca){
+			let maca = fase.spawn("#", obj.tilePos.sub(0, 1))
+		maca.jump()
+		obterMaca = true
+		}
+	})
+
+	player.onCollide("apple", (maca) => {
+		destroy(maca)
+		obterMaca = false
+		player.bigiffy(3)
+	})
 
 	player.onCollide("espinho", () => {
 		go("derrota")
