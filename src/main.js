@@ -26,12 +26,11 @@ loadSound("bell", "/sounds/bell.mp3")
 
 function big(){
 	let timer = 0
-    let isBig = false
+	let isBig = false
 	let destScale = 1
 	return {
 		id: "big",
 		require: ["scale"],
-
 		update(){
 			if(isBig){
 				timer -= dt()
@@ -41,7 +40,6 @@ function big(){
 			}
 
 			this.scale = this.scale.lerp(vec2(destScale), dt() * 6)
-
 		},
 
 		isBig(){
@@ -50,14 +48,14 @@ function big(){
 
 		smalliffy(){
 			destScale = 1
-			timer = 0
 			isBig = false
+			timer = 0
 		},
 
-		biggify(time){
+		biggiffy(time){
 			destScale = 2
-			timer = time
 			isBig = true
+			timer = time
 		}
 	}
 }
@@ -238,6 +236,22 @@ scene("game", ({nivel, pontos}) => {
 		camPos(player.pos)
 	})
 
+	let hasApple = false
+
+	player.onHeadbutt((obj) => {
+		if(obj.is("prize") && !hasApple){
+			let maca = fase.spawn("#", obj.tilePos.sub(0, 1))
+		    maca.jump()
+		    hasApple = true
+		}
+	})
+
+	player.onCollide("apple", (obj) => {
+		destroy(obj)
+		player.biggiffy(3)
+		hasApple = false
+	})
+
 	player.onCollide("portal", () => {
 		if(nivel < FASES.length - 1){
 			go("game", {
@@ -247,22 +261,6 @@ scene("game", ({nivel, pontos}) => {
 		}else{
 			go("Vitoria", {pontos: pontos})
 		}
-	})
-
-	let hasApple = false
-
-	player.onHeadbutt((obj) => {
-		if(obj.is("prize") && !hasApple){
-			const apple = fase.spawn("#", obj.tilePos.sub(0, 1))
-			apple.jump()
-			hasApple = true
-		}
-	})
-
-	player.onCollide("apple",(apple) => {
-		player.biggify(3)
-		destroy(apple)
-		hasApple = false
 	})
 
 
