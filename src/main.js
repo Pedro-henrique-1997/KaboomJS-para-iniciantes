@@ -1,321 +1,134 @@
 import kaboom from "kaboom"
 
 kaboom({
-	background: [141, 183, 255],
+	background: [74, 48, 82],
 })
 
-loadSprite("bigyoshi", "/examples/sprites/YOSHI.png")
-loadSprite("bean", "/sprites/bean.png")
+
 loadSprite("bag", "/sprites/bag.png")
 loadSprite("ghosty", "/sprites/ghosty.png")
-loadSprite("spike", "/sprites/spike.png")
 loadSprite("grass", "/sprites/grass.png")
 loadSprite("steel", "/sprites/steel.png")
-loadSprite("prize", "/sprites/jumpy.png")
-loadSprite("apple", "/sprites/apple.png")
-loadSprite("portal", "/sprites/portal.png")
-loadSprite("coin", "/sprites/coin.png")
-loadSound("coin", "/sounds/bell.mp3")
-loadSound("powerup", "/sounds/powerup.mp3")
-loadSound("blip", "/examples/sounds/blip.mp3")
-loadSound("hit", "/examples/sounds/hit.mp3")
-loadSound("portal", "/sounds/cano.mp3")
-loadSound("bell", "/sounds/bell.mp3")
+loadSprite("door", "/sprites/door.png")
+loadSprite("key", "/sprites/key.png")
+loadSprite("bean", "/sprites/bean.png")
+loadSprite("snow", "/sprites/snow.png")
+loadSprite("peixe", "/sprites/bobo.png")
 
-//Funcoes de comportamento
+scene("game", (levelIdx) => {
+	
+	const SPEED = 320
 
-function patrulhamento(speed = 60, dir = 1){
-	return{
-		id:["patrulheiro"],
-		require: ["area", "pos"],
-
-		add(){
-			this.on("collide", (obj, col) => {
-				if(col.isLeft() || col.isRight()){
-					dir = -dir
-				}
-			})
+	const caracters = {
+		a: {
+			sprite: "bag",
+            msg: "Hi Bean! You should get that key!",
 		},
 
-		update(){
-			this.move(speed * dir, 0)
-		}
+		b: {
+			sprite: "ghosty",
+			msg: "Who are you? You can see me??",
+		},
+
+		v: {
+			sprite: "peixe",
+			msg: "Use a chave para acessar as dungeons",
+		},
 	}
-}
 
-function big(){
-	let timer = 0
-	let isBig = false
-	let destScale = 1
+	const levels = [
+		[
+			"===|====",
+			"=      =",
+			"= $    =",
+			"=    a =",
+			"=      =",
+			"=   @  =",
+			"========",
+		],
+		[
+			"--------",
+			"-      -",
+			"-   $  -",
+			"|      -",
+			"-    b -",
+			"-  @   -",
+			"--------",
+		],
 
-	return {
-		id: ["big"],
-		require: ["scale"],
+		[
+			"++++++++++++++",
+			"+            +",
+			"|   $        +",
+			"+            +",
+			"+   @        +",
+			"+            +",
+			"+        v   +",
+			"++++++++++++++",
+		]
+	]
 
-		update(){
-			if(isBig){
-				timer -= dt()
-				if(timer <= 0){
-					this.smalliffy()
-				}
-			}
-
-			this.scale = this.scale.lerp(vec2(destScale), dt() * 6)
-		},
-
-		isBig(){
-			return isBig
-		},
-
-		smalliffy(){
-			isBig = false
-			timer = 0
-			destScale = 1
-		},
-
-		bigiffy(time){
-			isBig = true
-			timer = time
-			destScale = 2
-		}
-	}
-}
-
-const FASES = [
-	[
-		"    0       ",
-		"   --       ",
-		"       $$   ",
-		" %    ===   ",
-		"            ",
-		"   ^^  > = @",
-		"============",
-	],
-	[
-		"                          $",
-		"                          $",
-		"                          $",
-		"                          $",
-		"                          $",
-		"           $$         =   $",
-		"  %      ====         =   $",
-		"                      =   $",
-		"                      =    ",
-		"       ^^      = >    =   @",
-		"===========================",
-	],
-	[
-		"     $    $    $    $     $",
-		"     $    $    $    $     $",
-		"                           ",
-		"                           ",
-		"                           ",
-		"                           ",
-		"                           ",
-		" ^^^^>^^^^>^^^^>^^^^>^^^^^@",
-		"===========================",
-	],
-]
-
-
-setGravity(2400)
-
-const velocidade = 500;
-
-scene("game", ({nivel, pontos}) => {
-	const fase = addLevel(FASES[nivel || 0], {
+	const level = addLevel(levels[levelIdx], {
 		tileWidth: 64,
 		tileHeight: 64,
+		pos: vec2(420, 100),
 		tiles: {
 			"=": () => [
 				sprite("grass"),
 				area(),
 				body({ isStatic: true }),
-				anchor("bot"),
-				offscreen({ hide: true }),
-				"platform",
+				anchor("center"),
 			],
 			"-": () => [
 				sprite("steel"),
 				area(),
 				body({ isStatic: true }),
-				offscreen({ hide: true }),
-				anchor("bot"),
-			],
-			"0": () => [
-				sprite("bag"),
-				area(),
-				body({ isStatic: true }),
-				offscreen({ hide: true }),
-				anchor("bot"),
+				anchor("center"),
 			],
 			"$": () => [
-				sprite("coin"),
+				sprite("key"),
 				area(),
-				pos(0, -9),
-				anchor("bot"),
-				offscreen({ hide: true }),
-				"moeda",
-			],
-			"%": () => [
-				sprite("prize"),
-				area(),
-				body({ isStatic: true }),
-				anchor("bot"),
-				offscreen({ hide: true }),
-				"prize",
-			],
-			"^": () => [
-				sprite("spike"),
-				area(),
-				body({ isStatic: true }),
-				anchor("bot"),
-				offscreen({ hide: true }),
-				"espinho",
-			],
-			"#": () => [
-				sprite("apple"),
-				area(),
-				anchor("bot"),
-				body(),
-				offscreen({ hide: true }),
-				"apple",
-			],
-			">": () => [
-				sprite("ghosty"),
-				area(),
-				anchor("bot"),
-				body(),
-				patrulhamento(),
-				offscreen({ hide: true }),
-				"enemy",
+				anchor("center"),
+				"key",
 			],
 			"@": () => [
-				sprite("portal"),
-				area({ scale: 0.5 }),
-				anchor("bot"),
-				pos(0, -12),
-				offscreen({ hide: true }),
-				"portal",
+				sprite("bean"),
+				area(),
+				body(),
+				anchor("center"),
+				"player",
 			],
+			"|": () => [
+				sprite("door"),
+				area(),
+				body({ isStatic: true }),
+				anchor("center"),
+				"door",
+			],
+
+			"+": () => [
+				sprite("snow"),
+				area(),
+				body({isStatic: true}),
+				anchor("center"),
+			],
+
 		},
-		
-	})
 
-	const player = add([
-		sprite("bean"),
-		pos(0, 2),
-		area(),
-		scale(1),
-		// makes it fall to gravity and jumpable
-		body(),
-		// the custom component we defined above
-		big(),
-		anchor("bot"),
-	])
-
-	const JUMP_FORCE = 1320
-
-
-	function pular(){
-		if(player.isGrounded()){
-			player.jump(JUMP_FORCE)
-		}
-	}
-
-	onKeyDown("space", pular)
-
-	onKeyDown("right", () => {
-		player.move(velocidade, 0)
-	})
-
-	onKeyDown("left", () => {
-		player.move(-velocidade, 0)
-	})
-
-	player.onUpdate(() => {
-		if(player.pos.y >= 2400){
-			go("derrota")
+		wildcardTile(ch){
+			const char = caracters[ch]
+			if(char){
+				return [
+					sprite(char.sprite),
+					anchor("center"),
+					area(),
+					body({isStatic: true}),
+					"caracterer",
+					{msg: char.msg}					
+				]
+			}
 		}
 	})
-
-	var pontosLabel = add([
-		text(pontos),
-		pos(12),
-		fixed(),
-	])
-
-	player.onCollide("moeda", (moeda) => {
-		destroy(moeda);
-		pontos++;
-		pontosLabel.text = pontos;
-		play("bell")
-	})
-
-	player.onUpdate(() => {
-		camPos(player.pos)
-	})
-
-	player.onCollide("portal", () => {
-		if(nivel < FASES.length - 1){
-			go("game", {
-				nivel: nivel + 1,
-				pontos: pontos
-			})
-		}else{
-			go("Vitoria", {pontos: pontos})
-		}
-	})
-
-	let temMaca = false
-
-	player.onHeadbutt((obj) => {
-		if(obj.is("prize") && !temMaca){
-			const maca = fase.spawn("#", obj.tilePos.sub(0, 1))
-			maca.jump()
-			temMaca = true
-		}
-	})
-
-	player.onCollide("apple", (obj) => {
-		destroy(obj)
-		temMaca = false
-		player.bigiffy(3)
-	})
-
-
-	player.onCollide("espinho", () => {
-		go("derrota")
-	})
-
-
-	// grow an apple if player's head bumps into an obj with "prize" tag
-	
 })
 
-scene("derrota", () => {
-	add([
-		text("Voce Perdeu"),
-		pos(12),
-	])
-
-	onKeyPress(comecarGame)
-})
-
-scene("Vitoria", ({pontos}) => {
-	add([
-		text("Voce Venceu! E pegou " + pontos + " moedas"),
-		pos(12)
-	])
-
-	onKeyPress(comecarGame)
-})
-
-function comecarGame(){
-	go("game", {
-		nivel: 0,
-		pontos: 0,
-	})
-}
-
-comecarGame()
+go("game", 0)
