@@ -19,21 +19,21 @@ scene("game", (levelIdx) => {
 	
 	const SPEED = 320
 
-	const caracters = {
+	const caracteres = {
 		a: {
 			sprite: "bag",
-            msg: "Hi Bean! You should get that key!",
+			msg: "Use as chaves para acessar as dungeons",
 		},
 
 		b: {
 			sprite: "ghosty",
-			msg: "Who are you? You can see me??",
+			msg: "Vá rapido para a porta",
 		},
 
 		v: {
 			sprite: "peixe",
-			msg: "Use a chave para acessar as dungeons",
-		},
+			msg: "Seja bravo bean",
+		}
 	}
 
 	const levels = [
@@ -116,15 +116,14 @@ scene("game", (levelIdx) => {
 		},
 
 		wildcardTile(ch){
-			const char = caracters[ch]
+			const char = caracteres[ch]
 			if(char){
 				return [
 					sprite(char.sprite),
-					anchor("center"),
-					area(),
 					body({isStatic: true}),
-					"caracterer",
-					{msg: char.msg}					
+					area(),
+					anchor("center"),
+					{msg: char.msg}
 				]
 			}
 		}
