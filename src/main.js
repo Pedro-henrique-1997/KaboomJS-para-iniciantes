@@ -16,21 +16,22 @@ loadSprite("snow", "/sprites/snow.png")
 loadSprite("peixe", "/sprites/bobo.png")
 
 scene("game", (levelIdx) => {
-	
+	const SPEED = 320
+
 	const caracteres = {
-		a: {
-			sprite: "bag",
-			msg: "Use a chave para acessar as dungeons",
+		"a": {
+			sprite:"bag",
+			msg: "Use a chave bean",
 		},
 
-		b: {
+		"b": {
 			sprite: "ghosty",
-			msg: "Rapido! Pegue a chave",
+			msg: "Somente com a chave que passaras pela porta",
 		},
 
-		v: {
+		"v": {
 			sprite: "peixe",
-			msg: "Siga em frente",
+			msg: "Explore as dungeons bean",
 		},
 	}
 
@@ -111,24 +112,21 @@ scene("game", (levelIdx) => {
 				anchor("center"),
 			],
 		},
-		// any() is a special function that gets called everytime there's a
-		// symbole not defined above and is supposed to return what that symbol
-		// means
 
 		wildcardTile(ch){
-			let char = caracteres[ch]
+			const char = caracteres[ch]
 			if(char){
 				return[
 					sprite(char.sprite),
 					body({isStatic: true}),
 					area(),
 					anchor("center"),
-					{msg: char.msg},
+					{msg: char.msg}
 				]
 			}
 		},
-		
 	})
+	
 })
 
 go("game", 0)
