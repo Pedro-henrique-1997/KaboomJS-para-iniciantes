@@ -16,22 +16,23 @@ loadSprite("snow", "/sprites/snow.png")
 loadSprite("peixe", "/sprites/bobo.png")
 
 scene("game", (levelIdx) => {
-	const SPEED = 320
 
-	const caracteres = {
+	let speed = 320
+
+	let caracteres = {
 		"a": {
 			sprite:"bag",
-			msg: "Use a chave bean",
+			msg: "Pegue a chave bean",
 		},
 
 		"b": {
 			sprite: "ghosty",
-			msg: "Somente com a chave que passaras pela porta",
+			msg: "Somente com a chave que podera sair daqui",
 		},
 
 		"v": {
 			sprite: "peixe",
-			msg: "Explore as dungeons bean",
+			msg: "Rapido bean, fuja!",
 		},
 	}
 
@@ -114,19 +115,18 @@ scene("game", (levelIdx) => {
 		},
 
 		wildcardTile(ch){
-			const char = caracteres[ch]
+			let char = caracteres[ch]
 			if(char){
-				return[
+				return [
 					sprite(char.sprite),
 					body({isStatic: true}),
 					area(),
 					anchor("center"),
-					{msg: char.msg}
+					{msg: char.msg},
 				]
 			}
-		},
+		}
 	})
-	
 })
 
 go("game", 0)
