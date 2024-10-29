@@ -123,11 +123,91 @@ scene("game", (levelIdx) => {
 					body({isStatic: true}),
 					area(),
 					anchor("center"),
+					"character",
 					{msg: char.msg}
 				]
 			}
 		},
 	})
+
+	const player = level.get("player")[0]
+
+	const SPEED = 320
+
+	function addDialog(){
+		const h = 160
+		const pad = 16
+
+		const bg = add([
+			pos(0, height() - h),
+			rect(width(), h),
+			color(0, 0, 0),
+			z(100),
+		])
+
+		const txt = add([
+			text("", {
+				width: width(),
+			}),
+
+			pos(0 + pad, height() - h + pad),
+			z(100)
+		])
+
+		bg.hidden = true
+		txt.hidden = true
+
+		return{
+			say(t){
+				txt.text = t
+				bg.hidden = false
+				txt.hidden = false
+			},
+
+			active(){
+				return !bg.hidden
+			},
+
+			dismiss(){
+				if(!this.active()){
+					return
+				}
+
+				txt.text = ""
+				bg.hidden = true
+				txt.hidden = true
+			},
+
+			destroy(){
+				bg.destroy()
+				txt.destroy()
+			}
+		}
+	}
+
+	const dialog =  addDialog()
+
+
+	player.onCollide("character", (ch) => {
+		dialog.say(ch.msg)
+	})
+
+	const dirs = {
+		"left": LEFT,
+		"right": RIGHT,
+		"up": UP,
+		"down": DOWN,
+	}
+
+	for(const dir in dirs){
+		onKeyPress(() => {
+			dialog.dismiss()
+		})
+
+		onKeyDown(dir, () => {
+			player.move(dirs[dir].scale(SPEED))
+		})
+	}
 })
 
 go("game", 0)
