@@ -131,21 +131,21 @@ scene("game", (levelIdx) => {
 	})
 
 	function addDialog(){
-		const h = 160
 		const pad = 16
+		const h = 160
 
 		const bg = add([
-			pos(0, height() - h),
-			color(0, 0, 0),
+			color(0,0,0),
 			rect(width(), h),
+			pos(0, height() - h),
 			z(100),
 		])
 
 		const txt = add([
 			text("", {
-				width: width(),
+				width: width()
 			}),
-			pos(0 + pad, height() - h, pad),
+			pos(0 + pad, height() - h + pad),
 			z(100),
 		])
 
@@ -164,7 +164,7 @@ scene("game", (levelIdx) => {
 			},
 
 			dismiss(){
-				if(!this.active){
+				if(!this.active()){
 					return
 				}
 
@@ -174,25 +174,23 @@ scene("game", (levelIdx) => {
 			},
 
 			destroy(){
-				bg.destroy()
 				txt.destroy()
+				bg.destroy()
 			}
 		}
 	}
 
-	const SPEED = 320
-	const dialog = addDialog()
-
-	// selecionando o jogador
-
 	const player = level.get("player")[0]
 
-	//criando as direções do jogador
+	const SPEED = 320
+	
+	const dialog = addDialog()
+
 	const dirs = {
 		"left": LEFT,
-		"right": RIGHT,
+		"right":RIGHT,
 		"up": UP,
-		"down": DOWN,
+		"down": DOWN
 	}
 
 	for(const dir in dirs){
@@ -204,10 +202,6 @@ scene("game", (levelIdx) => {
 			player.move(dirs[dir].scale(SPEED))
 		})
 	}
-
-	player.onCollide("character", (ch) => {
-		dialog.say(ch.msg)
-	})
 })
 
 go("game", 0)
