@@ -135,25 +135,28 @@ scene("main", (levelIdx) => {
 	// get the player game obj by tag
 	const player = level.get("player")[0]
 
-	function addDialog(){
-		const pad = 16
-		const h = 160
+	function addDialog() {
 
-		const bg = add([
-			rect(width(), h),
-			color(0,0,0),
-			pos(0, height() - h),
-			z(100),
+		// 1- altura e largura da caixa de texto
+		const h = 160 // altura da caixa de dialogo
+		const pad = 16 //espaço do preenchimento do texto
+		//1
+
+		//2- Background
+		const bg = add([ //criação do background
+			pos(0, height() - h), //posicao do background
+			rect(width(), h), //criação do retangulo
+			color(0, 0, 0), // cor preta do retangulo
+			z(100), //profundidade
 		])
-
+		//2 Adicionando o texo
 		const txt = add([
-			text("", {
-				width: width()
+			text("", { // criação do conteudo do texto
+				width: width(),
 			}),
+			pos(0 + pad, height() - h + pad), //posição do texto
 			z(100),
-			pos(0 + pad, height())
 		])
-
 		bg.hidden = true
 		txt.hidden = true
 		return {
@@ -184,6 +187,30 @@ scene("main", (levelIdx) => {
 		}
 	}
 
+	var haskey = false
+	var dialog = addDialog()
+
+	player.onCollide("key", (key) => {
+		haskey = true
+		destroy(key)
+	})
+
+	player.onCollide("door", () => {
+		if(haskey){
+			if(levelIdx + 1 < levels.length){
+				go("main", levelIdx + 1)
+			}else{
+				go("win")
+			}
+		}else{
+			dialog.say("Voce nao pegou a chave")
+		}
+	})
+
+	player.onCollide("character", (ch) => {
+		dialog.say(ch.msg)
+	})
+
 	const dirs = {
 		"left":LEFT,
 		"right":RIGHT,
@@ -192,7 +219,9 @@ scene("main", (levelIdx) => {
 	}
 
 	for(const dir in dirs){
-		
+		onKeyPress(dir, () => {
+			dialog.dismiss()
+		})
 		onKeyDown(dir, () => {
 			player.move(dirs[dir].scale(SPEED))
 		})
