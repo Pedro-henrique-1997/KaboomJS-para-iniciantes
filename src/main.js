@@ -187,16 +187,17 @@ scene("main", (levelIdx) => {
 		}
 	}
 
-	var haskey = false
 	var dialog = addDialog()
 
+	let hasKey = false
+
 	player.onCollide("key", (key) => {
-		haskey = true
 		destroy(key)
+		hasKey = true
 	})
 
 	player.onCollide("door", () => {
-		if(haskey){
+		if(hasKey){
 			if(levelIdx + 1 < levels.length){
 				go("main", levelIdx + 1)
 			}else{
