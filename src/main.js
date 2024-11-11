@@ -189,15 +189,15 @@ scene("main", (levelIdx) => {
 
 	var dialog = addDialog()
 
-	var obterChave = false
+	var hasKey = false
 
 	player.onCollide("key", (key) => {
+		hasKey = true
 		destroy(key)
-		obterChave = true
 	})
 
 	player.onCollide("door", () => {
-		if(obterChave){
+		if(hasKey){
 			if(levelIdx + 1 < levels.length){
 				go("main", levelIdx + 1)
 			}else{
@@ -211,7 +211,7 @@ scene("main", (levelIdx) => {
 	player.onCollide("character", (ch) => {
 		dialog.say(ch.msg)
 	})
-
+	
 	const dirs = {
 		"left":LEFT,
 		"right":RIGHT,
